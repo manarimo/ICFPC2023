@@ -1,3 +1,4 @@
+import Image from "next/image";
 import useProblemList from "./hooks/useProblemList";
 import "@/styles/Home.module.css";
 
@@ -46,12 +47,11 @@ const HomeContainer = () => {
               padding: "5px",
             }}
           >
-            <img
-              style={{
-                width: "400px",
-                maxHeight: "200px",
-              }}
-              src="/problems/images/1.svg"
+            <Image
+              width={400}
+              height={200}
+              src={`/problems/images/${problem.id}.svg`}
+              alt=""
             />
           </td>
         </tr>
