@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { render } from "./render";
+import React from "react";
 
 type Props = {
   problem: Parameters<typeof render>[1];
@@ -15,11 +16,13 @@ const Canvas = ({ problem }: Props) => {
 
   useEffect(() => {
     if (context) {
+      context.canvas.height = window.innerHeight - 10;
+      context.canvas.width = window.innerWidth - 10;
       render(context, problem);
     }
   }, [context, problem]);
 
-  return <canvas width="1500" height="750" id="canvas"></canvas>;
+  return <canvas id="canvas" />;
 };
 
 export default Canvas;
