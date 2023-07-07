@@ -17,13 +17,11 @@ const Canvas = ({ problem, solution }: Props) => {
 
   useEffect(() => {
     if (context) {
-      context.canvas.height = window.innerHeight - 10;
-      context.canvas.width = window.innerWidth - 10;
       render(context, problem, solution);
     }
   }, [context, problem, solution]);
 
-  return <canvas id="canvas" />;
+  return <canvas id="canvas" width="1000" height="1000" />;
 };
 
 export default Canvas;

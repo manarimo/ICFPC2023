@@ -1,7 +1,7 @@
 import useSWR from "swr";
 
-const useSolution = (solutionId: string) => {
-  const url = `/solutions/${solutionId}.json`;
+const useSolution = (solver: string | undefined, problemId: number) => {
+  const url = solver ? `/solutions/${solver}/${problemId}.json` : null;
   const fetcher = async (url: string) => {
     const response = await fetch(url);
     const body = await response.json();

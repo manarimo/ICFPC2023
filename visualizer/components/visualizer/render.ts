@@ -29,6 +29,7 @@ export const render = (
   problem: Problem,
   solution?: Solution
 ) => {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   const widthZoom = ctx.canvas.width / problem.room.width;
   const heightZoom = ctx.canvas.height / problem.room.height;
   const zoom = Math.min(widthZoom, heightZoom);
