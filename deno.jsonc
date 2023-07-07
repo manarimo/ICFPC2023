@@ -4,6 +4,7 @@
     "paint": "deno run --allow-all painter/cli.ts",
     "paint-all": "deno run --allow-all paint_all.ts",
     "paint-solutions": "deno run --allow-all painter/paint_solutions.ts",
-    "gen-portal": "deno run --allow-all public/gen.ts"
+    "gen-portal": "deno run --allow-all public/gen.ts",
+    "gen-problem-index": "deno run --allow-all public/gen_problem_index.ts"
   }
 }

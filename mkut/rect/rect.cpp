@@ -202,7 +202,7 @@ int main() {
     sa.print();
     
     // fprintf(stderr, "best_score : %lf\n", best_score);
-    fprintf(stderr, "best_score : %lld\n", score(prob, best_solution.placements));
+    fprintf(stderr, "best_score : %lld\n", score(prob, best_solution.as_p()));
     
     return 0;
 }
