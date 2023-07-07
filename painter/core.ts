@@ -37,7 +37,7 @@ export async function processFile(problemFile: string, solutionFile: string | un
     // Draw stage boundary
     svg.rect({
         x: problem.stage_bottom_left[0],
-        y: problem.stage_bottom_left[1],
+        y: problem.room_height - problem.stage_bottom_left[1] - problem.stage_height,
         width: problem.stage_width,
         height: problem.stage_height,
         stroke: 'black',
@@ -48,7 +48,7 @@ export async function processFile(problemFile: string, solutionFile: string | un
     for (const attendee of problem.attendees) {
         svg.circle({
             x: attendee.x,
-            y: attendee.y,
+            y: problem.room_height - attendee.y,
             radius: 5,
             fill: 'green'
         });
@@ -59,7 +59,7 @@ export async function processFile(problemFile: string, solutionFile: string | un
         for (const p of solution.placements) {
             svg.circle({
                 x: p.x,
-                y: p.y,
+                y: problem.room_height - p.y,
                 radius: 5,
                 fill: 'blue'
             });
