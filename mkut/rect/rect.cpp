@@ -3,6 +3,7 @@
 #include "../../library/geo.h"
 #include "../../library/xorshift.h"
 #include "../../library/problem.h"
+#include "../../library/solution.h"
 #include "../../library/simulated_annealing.h"
 #include "../../library/scoring.h"
 using namespace std;
@@ -146,12 +147,12 @@ class solver_t {
         placements[pos_a] = tmp;
     }
 
-    vector<P> get_placements() {
+    solution_t get_solution() {
         vector<P> ret(N);
         for (int i = 0; i < N; i++) {
             ret[placements[i]] = positions[i];
         }
-        return ret;
+        return solution_t(ret);
     }
 };
 
@@ -174,7 +175,7 @@ int main() {
     solver_t solver(prob);
     
     double best_score = -1e18;
-    vector<geo::P> best_placements;
+    solution_t best_solution;
     sa::simulated_annealing sa;
     while (!sa.end()) {
         double rnd = xor32() / pow(2.0, 32);
@@ -189,19 +190,19 @@ int main() {
             solver.swap(x, y);
             if (solver.current_score > best_score) {
                 best_score = solver.current_score;
-                best_placements = solver.get_placements();
+                best_solution = solver.get_solution();
             }
         } else {
             // not use
         }
     }
 
-    output(best_placements);
+    print_solution(cout, best_solution);
     
     sa.print();
     
-    fprintf(stderr, "best_score : %lf\n", best_score);
-    fprintf(stderr, "best_score : %lld\n", score(prob, best_placements));
+    // fprintf(stderr, "best_score : %lf\n", best_score);
+    fprintf(stderr, "best_score : %lld\n", score(prob, best_solution.placements));
     
     return 0;
 }
