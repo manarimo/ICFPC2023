@@ -10,7 +10,7 @@ using namespace std;
 // c++ -std=c++20 -O3 -I../../library main.cpp
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        cout << argv[0] << " problem solution" << endl;
+        cout << argv[0] << " problem solution [--skip-validate]" << endl;
         return 0; 
     }
     manarimo::problem_t prob;
@@ -19,10 +19,12 @@ int main(int argc, char *argv[]) {
     manarimo::load_solution(argv[2], sol);
 
     vector<geo::P> placements = sol.as_p();
-    if (!manarimo::validate(prob, placements)) {
-        cerr << "invalid solution" << endl;
-        cout << 0 << endl;
-        return 0;
+    if (argc < 4 || string(argv[3]) != "--skip-validate") {
+        if (!manarimo::validate(prob, placements)) {
+            cerr << "invalid solution" << endl;
+            cout << 0 << endl;
+            return 0;
+        }
     }
     cout << manarimo::score(prob, placements) << endl;
     return 0;

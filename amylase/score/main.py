@@ -17,11 +17,14 @@ def ensure_judge_binary():
 
 def main():
     if len(sys.argv) < 3:
-        print(f"usage: {sys.argv[0]} problem solution")
+        print(f"usage: {sys.argv[0]} problem solution [--skip-validate]")
         return
 
     ensure_judge_binary()
-    subprocess.run([str(binary_path), sys.argv[1], sys.argv[2]])
+    args = [str(binary_path), sys.argv[1], sys.argv[2]]
+    if len(sys.argv) >= 4:
+        args.append(sys.argv[3])
+    subprocess.run(args)
 
 
 if __name__ == '__main__':

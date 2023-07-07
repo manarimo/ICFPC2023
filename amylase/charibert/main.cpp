@@ -78,7 +78,7 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double TIME_LIMIT = 10;
+    constexpr static double TIME_LIMIT = 30;
     constexpr static double START_TEMP = 100000;
     constexpr static double END_TEMP = 1e-9;
     constexpr static double TEMP_RATIO = (END_TEMP - START_TEMP) / TIME_LIMIT;

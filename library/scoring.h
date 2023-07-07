@@ -25,16 +25,16 @@ namespace manarimo {
                 }
             }
 
-            if (placements[i].first < problem.stage_bottom_left.first) {
+            if (placements[i].first < problem.stage_bottom_left.first + min_distance) {
                 return false;
             }
-            if (placements[i].second < problem.stage_bottom_left.second) {
+            if (placements[i].second < problem.stage_bottom_left.second + min_distance) {
                 return false;
             }
-            if (placements[i].first > problem.stage_bottom_left.first + problem.stage_width) {
+            if (placements[i].first > problem.stage_bottom_left.first + problem.stage_width - min_distance) {
                 return false;
             }
-            if (placements[i].second > problem.stage_bottom_left.second + problem.stage_height) {
+            if (placements[i].second > problem.stage_bottom_left.second + problem.stage_height - min_distance) {
                 return false;
             }
         }
