@@ -1,0 +1,20 @@
+{
+  "name": "portal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "prebuild": "rm -rf dist",
+    "build": "esbuild lambda.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild": "cd dist && zip -r index.zip index.js*"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.367.0",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.4.0",
+    "esbuild": "^0.18.11",
+    "pg": "^8.11.1"
+  }
+}
