@@ -52,19 +52,6 @@ namespace manarimo {
         }
         return angle;
     }
-
-    long long score(const problem_t& problem, const vector<P>& placements) {
-        vector<pair<int, int>> unblocked_pairs = get_unblocked_pairs(problem, placements);
-
-        long long score = 0;
-        for (auto unblocked_pair : unblocked_pairs) {
-            const int i_musician = unblocked_pair.first;
-            const int i_attendee = unblocked_pair.second;
-            const P attendee_location = {problem.attendees[i_attendee].x, problem.attendees[i_attendee].y};
-            score += ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician]));
-        }
-        return score;
-    }
     
     vector<pair<int, int>> get_unblocked_pairs(const problem_t& problem, const vector<P>& placements) {
         const int n_musician = problem.musicians.size();
@@ -137,6 +124,19 @@ namespace manarimo {
         }
 
         return unblocked_pairs;
+    }
+
+    long long score(const problem_t& problem, const vector<P>& placements) {
+        vector<pair<int, int>> unblocked_pairs = get_unblocked_pairs(problem, placements);
+
+        long long score = 0;
+        for (auto unblocked_pair : unblocked_pairs) {
+            const int i_musician = unblocked_pair.first;
+            const int i_attendee = unblocked_pair.second;
+            const P attendee_location = {problem.attendees[i_attendee].x, problem.attendees[i_attendee].y};
+            score += ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician]));
+        }
+        return score;
     }
 };
 
