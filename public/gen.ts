@@ -71,3 +71,10 @@ f.write(enc.encode(`
 `));
 
 f.close();
+
+let sql = 'INSERT INTO problems (problem_id, room_width, room_height, num_musicians, num_attendees) VALUES ';
+const values = [];
+for (const attr of attrs) {
+    values.push(`(${attr.id}, ${attr.roomWidth}, ${attr.roomHeight}, ${attr.numMusicians}, ${attr.numAttendees})`);
+}
+console.log(sql + values.join(','));
