@@ -13,6 +13,11 @@ namespace manarimo {
     using json = nlohmann::json;
     using number = double;
 
+    struct P2 {
+        number first;
+        number second;
+    };
+
     struct atendee_t {
         number x;
         number y;
@@ -26,34 +31,13 @@ namespace manarimo {
         number room_height;
         number stage_width;
         number stage_height;
-        P stage_bottom_left;
+        P2 stage_bottom_left;
 
         vector<int> musicians;
         vector<atendee_t> attendees;
-
-        // 前計算。直接読んでもいいけど、外から書き換えると壊れるので注意
-        /*
-        P outer;
-        bool inside[MAX_C][MAX_C];
-        bool inside_double[MAX_C * 2][MAX_C * 2];
-        double dist[MAX_C][MAX_C];
-        int degree[MAX_P];
-        number min_x = 1e18, min_y = 1e18, max_x = 0, max_y = 0;
-
-        void init();
-        bool is_point_inside(const P& point);
-        bool is_edge_inside(const P& p1, const P& p2);
-        number calc_dislike(const vector<P>& positions);
-        
-        void output(const vector<P>& vertices);
-    private:
-        // 前計算の初期化用にinit()内で使うための関数群
-        bool is_point_inside(const vector<P>& hole, const P& point);
-        double dist_hole_point(const vector<P>& hole, const P& point);
-        */
     };
 
-    void from_json(const json& j, P& p) {
+    void from_json(const json& j, P2& p) {
         j.at(1).get_to(p.first);
         j.at(0).get_to(p.second);
     }
