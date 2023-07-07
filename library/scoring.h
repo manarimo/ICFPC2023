@@ -52,11 +52,7 @@ namespace manarimo {
         return angle;
     }
 
-    number score(const problem_t& problem, const vector<P>& placements) {
-        if (!validate(problem, placements)) {
-            return 0;
-        }
-
+    long long score(const problem_t& problem, const vector<P>& placements) {
         const int n_musician = problem.musicians.size();
         const int n_attendee = problem.attendees.size();
         
@@ -83,9 +79,12 @@ namespace manarimo {
             // add event type=0, 2
             // assuming that musician distance is at least 10 (> 5)
             int overlapping_spans = 0;
-            for (int i_musician = 0; i_musician < n_musician; i_musician++) {
+            for (int j_musician = 0; j_musician < n_musician; j_musician++) {
+                if (j_musician == i_musician) {
+                    continue;
+                }
                 const number block_distance = 5;
-                const cP location = {placements[i_musician].first, placements[i_musician].second};
+                const cP location = {placements[j_musician].first, placements[j_musician].second};
                 const cP vec = location - center;
                 const number distance = abs(vec);
                 const number vec_argument = arg(vec);
@@ -97,15 +96,15 @@ namespace manarimo {
                     overlapping_spans += 1;
                 }
                 events.emplace_back(start, event_infos.size());
-                event_infos.push_back({0, i_musician});
+                event_infos.push_back({0, j_musician});
                 events.emplace_back(end, event_infos.size());
-                event_infos.push_back({2, i_musician});
+                event_infos.push_back({2, j_musician});
             }
 
             sort(events.begin(), events.end());
             for (const auto event: events) {
                 const auto event_info = event_infos[event.second];
-                switch (event_info.type == 0) {
+                switch (event_info.type) {
                     case 0:
                         overlapping_spans += 1;
                         break;
@@ -118,17 +117,17 @@ namespace manarimo {
                         overlapping_spans -= 1;
                         break;
                     default:
-
+                        throw -1;
                 } 
             }
         }
 
-        number score = 0;
+        long long score = 0;
         for (auto unblocked_pair : unblocked_pairs) {
             const int i_musician = unblocked_pair.first;
             const int i_attendee = unblocked_pair.second;
             const P attendee_location = {problem.attendees[i_attendee].x, problem.attendees[i_attendee].y};
-            score += 1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician]);
+            score += ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician]));
         }
         return score;
     }
