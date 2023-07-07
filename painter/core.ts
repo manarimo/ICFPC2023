@@ -29,6 +29,8 @@ export async function processFile(inFile: string, outFile: string): Promise<void
         y: problem.stage_bottom_left[1],
         width: problem.stage_width,
         height: problem.stage_height,
+        stroke: 'black',
+        fill: 'white',
     });
 
     // Draw attendees
