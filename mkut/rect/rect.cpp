@@ -1,10 +1,10 @@
 #include <iostream>
 #include <set>
-#include "../library/geo.h"
-#include "../library/xorshift.h"
-#include "../library/problem.h"
-#include "../library/simulated_annealing.h"
-#include "../library/scoring.h"
+#include "../../library/geo.h"
+#include "../../library/xorshift.h"
+#include "../../library/problem.h"
+#include "../../library/simulated_annealing.h"
+#include "../../library/scoring.h"
 using namespace std;
 using namespace manarimo;
 
