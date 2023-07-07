@@ -1,0 +1,34 @@
+#main-table {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+#main-table td {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+#main-table th {
+  border: 1px solid black;
+}
+
+#main-table tr {
+  max-height: 200px;
+}
+
+#main-table .thumbnail {
+  width: 400px;
+  max-height: 200px;
+}
+
+.rainbow-text {
+  font-family: Courier;
+  font-weight: bold;
+  font-style: italic;
+  font-size: 50px;
+  text-shadow: #A3A3A3 1px 1px 1px;
+}
+
+.rainbow-text .block-line>span {
+  display: inline-block;
+}
