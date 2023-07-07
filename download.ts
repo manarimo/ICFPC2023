@@ -20,7 +20,7 @@ async function download(id: number, path: string) {
 }
 
 async function main() {
-    for (let i = 1; i <= 45; i++) {
+    for (let i = 1; i <= 55; i++) {
         await download(i, 'problems');
     }
 }
