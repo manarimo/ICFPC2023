@@ -1,12 +1,10 @@
-import {
-  APIGatewayProxyEventV2,
-  APIGatewayProxyResultV2,
-  Context,
-} from "https://deno.land/x/lambda@1.32.5/mod.ts";
-import { Client } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
+import { Context, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { GatewayEvent } from "./types";
+import { submitSolutionHandler } from "./submit_solution";
+import { Client } from 'pg';
 
-const dbHost = Deno.env.get('POSTGRES_HOST')!;
-const password = Deno.env.get('POSTGRES_PASSWORD')!;
+const dbHost = process.env['POSTGRES_HOST']!;
+const password = process.env['POSTGRES_PASSWORD']!;
 
 const pg = new Client({
     user: 'postgres',
@@ -17,18 +15,22 @@ const pg = new Client({
 });
 
 export async function handler(
-  event: APIGatewayProxyEventV2,
+  event: GatewayEvent,
   context: Context,
 ): Promise<APIGatewayProxyResultV2> {
-    const result = await pg.queryObject('SELECT * FROM problems');
-
-    const res = {
-        size: result.rowCount,
-        firstRow: result.rows[0]
-    };
+    let result: any;
+    if (event.context["resource-path"] == '/solutions/submit') {
+        result = await submitSolutionHandler(event, context);
+    } else {
+        const q = await pg.query('SELECT * FROM problems');
+        result = {
+            size: q.rowCount,
+            firstRow: q.rows[0]
+        };
+    }
 
   return {
-    body: JSON.stringify(res),
+    body: JSON.stringify(result),
     headers: { "content-type": "text/html;charset=utf8" },
     statusCode: 200,
   };
