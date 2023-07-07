@@ -99,7 +99,7 @@ def solve(problem: Problem) -> Solution:
                 "fun": fun_factory(i, j),
             })
 
-    res = scipy.optimize.minimize(objective, np.zeros((2 * len(problem.musicians), )), bounds=bounds, constraints=constraints, options={"disp": False})
+    res = scipy.optimize.minimize(objective, np.zeros((2 * len(problem.musicians), )), bounds=bounds, constraints=constraints, method="trust-constr", options={"disp": True})
     return arg_to_solution(res.x)
 
 
