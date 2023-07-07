@@ -1,4 +1,4 @@
-import { Context } from "aws-lambda";
+import { APIGatewayEventRequestContextV2, APIGatewayProxyEventV2, Context } from "aws-lambda";
 import { GatewayEvent } from "./types";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { writeFile } from "fs/promises";
@@ -30,17 +30,31 @@ async function saveSolution(id: string, content: string): Promise<string> {
 }
 
 export async function submitSolutionHandler(
-  event: GatewayEvent,
+  event: APIGatewayProxyEventV2,
   context: Context,
   pg: PgPool,
 ): Promise<any> {
     // Debug
     console.log(event);
 
+    // Validation
+    if (event.queryStringParameters == undefined) {
+        throw new Error('Query parameters missing');
+    }
+
     // Extract request info
-    const content = JSON.stringify(event['body-json']);
-    const solverName = event.params.querystring['solver'];
-    const problemId = event.params.querystring['problem_id'];
+    const content = event.body;
+    if (content == undefined) {
+        throw new Error('POST body missing');
+    }
+    const solverName = event.queryStringParameters['solver'];
+    if (solverName == undefined) {
+        throw new Error('solver param missing');
+    }
+    const problemId = event.queryStringParameters['problem_id'];
+    if (problemId == undefined) {
+        throw new Error('problem_id param missing');
+    }
 
     // Save problem and solution on the file system
     const [problemPath, solutionPath] = await Promise.all([
