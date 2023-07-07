@@ -6,8 +6,8 @@ use crate::Result;
 
 #[derive(Deserialize)]
 pub(crate) struct Problem {
-    pub(crate) room_width: f64,
-    pub(crate) room_height: f64,
+    // pub(crate) room_width: f64,
+    // pub(crate) room_height: f64,
     pub(crate) stage_width: f64,
     pub(crate) stage_height: f64,
     pub(crate) stage_bottom_left: (f64, f64),

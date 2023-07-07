@@ -14,10 +14,10 @@ pub fn run<P: AsRef<Path>, S: AsRef<Path>>(problem: P, solution: S) -> Result<()
     let mut solution = solution::load_solution(solution)?;
 
     loop {
-        solution = solver::solve(&problem, &solution);
+        solution = solver::simulated_annealing(&problem, &solution);
         let score = score::score(&problem, &solution.placements);
         let file = std::fs::File::create(format!("solution-{score}.json"))?;
         serde_json::to_writer(file, &solution)?;
-        eprintln!("score={score}");
+        log::info!("score={score}");
     }
 }
