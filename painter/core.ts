@@ -1,5 +1,5 @@
 import { serializeSvg } from "./codec.ts";
-import { Problem } from "./problem.ts";
+import { Problem, Solution } from "./problem.ts";
 import { Svg } from "./svg.ts";
 
 async function load(inFile: string): Promise<Problem> {
@@ -7,9 +7,20 @@ async function load(inFile: string): Promise<Problem> {
     return JSON.parse(json) as Problem;
 }
 
-export async function processFile(inFile: string, outFile: string): Promise<void> {
-    console.log(`Loading ${inFile}...`);
-    const problem = await load(inFile);
+async function loadSolution(inFile: string): Promise<Solution> {
+    const json = await Deno.readTextFile(inFile);
+    return JSON.parse(json) as Solution;
+}
+
+export async function processFile(problemFile: string, solutionFile: string | undefined, outFile: string): Promise<void> {
+    console.log(`Loading ${problemFile}...`);
+    const problem = await load(problemFile);
+
+    let solution = undefined;
+    if (solutionFile) {
+        console.log(`Loading ${solutionFile}...`);
+        solution = await loadSolution(solutionFile);
+    }
 
     console.log(`Converting into SVG...`);
     const svg = new Svg(problem.room_width, problem.room_height);
@@ -41,6 +52,18 @@ export async function processFile(inFile: string, outFile: string): Promise<void
             radius: 5,
             fill: 'green'
         });
+    }
+
+    if (solution) {
+        // Draw solutions
+        for (const p of solution.placements) {
+            svg.circle({
+                x: p.x,
+                y: p.y,
+                radius: 5,
+                fill: 'blue'
+            });
+        }
     }
 
     // Write out SVG file

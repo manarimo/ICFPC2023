@@ -13,3 +13,12 @@ export interface Problem {
     musicians: number[];
     attendees: Attendee[];
 }
+
+export interface Point {
+    x: number;
+    y: number;
+}
+
+export interface Solution {
+    placements: Point[];
+}
