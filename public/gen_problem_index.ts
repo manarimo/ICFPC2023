@@ -33,4 +33,4 @@ for await (const dirEntry of Deno.readDir('problems')) {
 }
 
 attrs.sort((a, b) => parseInt(a.id) - parseInt(b.id));
-Deno.writeTextFileSync("problems/index.json", JSON.stringify(attrs));
+Deno.writeTextFileSync("public/problem-index.json", JSON.stringify(attrs));
