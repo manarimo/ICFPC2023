@@ -66,7 +66,7 @@ def evaluate(problem: Problem, solution: Solution) -> float:
     score = 0
     for musician, placement in zip(problem.musicians, solution.placements):
         for attendee in problem.attendees:
-            score += attendee.tastes[musician.instrument] / distance(placement, attendee.position)
+            score += attendee.tastes[musician.instrument] / square_distance(placement, attendee.position)
     return -score
 
 
