@@ -3,7 +3,7 @@ use std::ops::Sub;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
-pub(crate) struct P {
+pub struct P {
     pub(crate) x: f64,
     pub(crate) y: f64,
 }

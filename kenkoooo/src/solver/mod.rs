@@ -6,7 +6,10 @@ use crate::{problem::Problem, score, solution::Solution, types::P};
 
 const RADIUS: f64 = 10.0;
 
-pub(crate) fn is_valid(problem: &Problem, placements: &[P]) -> bool {
+pub fn is_valid(problem: &Problem, placements: &[P]) -> bool {
+    if problem.musicians.len() != placements.len() {
+        return false;
+    }
     for p in placements {
         if p.x < problem.stage_bottom_left.0 + RADIUS
             || problem.stage_bottom_left.0 + problem.stage_width - RADIUS < p.x
@@ -31,7 +34,7 @@ pub(crate) fn is_valid(problem: &Problem, placements: &[P]) -> bool {
     true
 }
 
-pub(crate) fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
+pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
     let placements = solution.placements.clone();
     let score = score::score(&problem, &placements);
 

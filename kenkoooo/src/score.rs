@@ -2,7 +2,7 @@ use crate::{problem::Problem, P};
 
 const BLOCK_DISTANCE: f64 = 5.0;
 
-pub(crate) fn score(problem: &Problem, placements: &[P]) -> f64 {
+pub fn score(problem: &Problem, placements: &[P]) -> f64 {
     let mut total_score = 0.0;
     for i_musician in 0..placements.len() {
         total_score += single_score(problem, placements, i_musician);

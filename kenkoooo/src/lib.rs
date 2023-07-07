@@ -7,6 +7,10 @@ pub(crate) mod solution;
 pub(crate) mod solver;
 mod types;
 
+pub use problem::{load_problem, Problem};
+pub use score::score;
+pub use solution::{load_solution, Solution};
+pub use solver::{is_valid, simulated_annealing};
 pub(crate) use types::P;
 
 pub fn run<P: AsRef<Path>, S: AsRef<Path>>(problem: P, solution: S) -> Result<()> {
