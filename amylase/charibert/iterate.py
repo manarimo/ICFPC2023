@@ -19,8 +19,7 @@ def update(id: int):
 def ensure_binary():
     library_path = repositry_root / "library"
     judge_source_path = script_dir / "main.cpp"
-    if not binary_path.exists():
-        subprocess.run(["c++", "-std=c++20", "-I" + str(library_path), "-O2", str(judge_source_path), "-o", str(binary_path)])
+    subprocess.run(["c++", "-std=c++20", "-I" + str(library_path), "-O2", str(judge_source_path), "-o", str(binary_path)])
 
 
 def main():
