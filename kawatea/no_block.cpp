@@ -4,6 +4,10 @@
 #include <vector>
 #include <algorithm>
 #include "../library/problem.h"
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+#include "../library/scoring.h"
 
 using namespace std;
 
@@ -285,7 +289,7 @@ int main() {
     
     output(best_placements);
     
-    fprintf(stderr, "best_score : %lf\n", best_score);
+    fprintf(stderr, "best_score : %lld\n", manarimo::score(problem, best_placements));
     
     return 0;
 }
