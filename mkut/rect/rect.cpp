@@ -21,8 +21,12 @@ class solver_t {
     number Right;
     number Bottom;
     number Top;
+    number XInterval;
+    number YInterval;
     vector<int> leftPositions, rightPositions, bottomPositions, topPositions;
     vector<vector<double>> score_multi; // attendee -> musician_pos
+    vector<double> score_sensitivity;
+    vector<double> acc_score_sensitivity;
 
     vector<int> placements;
     double current_score;
@@ -33,41 +37,43 @@ class solver_t {
 
     void init() {
         N = prob.musicians.size();
-        W = prob.stage_width / 10;
-        H = prob.stage_width / 10;
-        Left = prob.stage_bottom_left.first + 5;
-        Bottom = prob.stage_bottom_left.second + 5;
-        Right = Left + (W-1) * 10;
-        Top = Bottom + (H-1) * 10;
+        W = prob.stage_width / 10 - 1;
+        H = prob.stage_height / 10 - 1;
+        Left = prob.stage_bottom_left.first + 10;
+        Bottom = prob.stage_bottom_left.second + 10;
+        Right = prob.stage_bottom_left.first + prob.stage_width - 10;
+        Top = prob.stage_bottom_left.second + prob.stage_height - 10;
+        XInterval = (Right - Left) / (W - 1);
+        YInterval = (Top - Bottom) / (H - 1);
         // bottom
         for (int i = 0; i < W && positions.size() < N; i++) {
             bottomPositions.push_back(positions.size());
-            positions.push_back(P(Left + i * 10, Bottom));
+            positions.push_back(P(Left + i * XInterval, Bottom));
         }
         // top
         for (int i = 0; i < W && positions.size() < N; i++) {
             topPositions.push_back(positions.size());
-            positions.push_back(P(Left + i * 10, Top));
+            positions.push_back(P(Left + i * XInterval, Top));
         }
         // left
         leftPositions.push_back(bottomPositions[0]);
         for (int i = 1; i < H-1 && positions.size() < N; i++) {
             leftPositions.push_back(positions.size());
-            positions.push_back(P(Left, Bottom + i * 10));
+            positions.push_back(P(Left, Bottom + i * YInterval));
         }
         leftPositions.push_back(topPositions[0]);
         // right
         rightPositions.push_back(bottomPositions[bottomPositions.size() - 1]);
         for (int i = 1; i < H-1 && positions.size() < N; i++) {
             rightPositions.push_back(positions.size());
-            positions.push_back(P(Right, Bottom + i * 10));
+            positions.push_back(P(Right, Bottom + i * YInterval));
         }
         rightPositions.push_back(topPositions[topPositions.size() - 1]);
         M = positions.size();
         // rest
         for (int i = 1; i < W-1 && positions.size() < N; i++) {
             for (int j = 1; j < H-1 && positions.size() < N; j++) {
-                positions.push_back(P(Left + i * 10, Bottom + j * 10));
+                positions.push_back(P(Left + i * XInterval, Bottom + j * YInterval));
             }
         }
 
@@ -77,6 +83,19 @@ class solver_t {
             int attendee_id = unblocked.second;
             auto attendee = prob.attendees[attendee_id];
             score_multi[attendee_id][musician_id] = 1000000 / d(attendee.get_pos(), positions[musician_id]);
+        }
+        double acc_sensitivity = 0;
+        for (int i = 0; i < N; i++) {
+            double sensitivity = 0;
+            for (int j = 0; j < prob.attendees.size(); j++) {
+                sensitivity += score_multi[j][i];
+                acc_sensitivity += score_multi[j][i];
+            }
+            score_sensitivity.push_back(sensitivity);
+            acc_score_sensitivity.push_back(acc_sensitivity);
+        }
+        for (int i = 0; i < N; i++) {
+            acc_score_sensitivity[i] /= acc_sensitivity;
         }
 
         for (int i = 0; i < N; i++) {
@@ -158,7 +177,9 @@ int main() {
     vector<geo::P> best_placements;
     sa::simulated_annealing sa;
     while (!sa.end()) {
-        int x = xor32() % solver.M;
+        double rnd = xor32() / pow(2.0, 32);
+        int x = lower_bound(solver.acc_score_sensitivity.begin(), solver.acc_score_sensitivity.end(), rnd) - solver.acc_score_sensitivity.begin(); //xor32() % solver.M;
+        // int x = xor32() % solver.M;
         int y = xor32() % (solver.N - 1);
         if (y >= x) y++;
         double current_score = solver.current_score;
@@ -176,6 +197,8 @@ int main() {
     }
 
     output(best_placements);
+    
+    sa.print();
     
     fprintf(stderr, "best_score : %lf\n", best_score);
     fprintf(stderr, "best_score : %lld\n", score(prob, best_placements));
