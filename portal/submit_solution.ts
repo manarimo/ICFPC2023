@@ -3,6 +3,7 @@ import { GatewayEvent } from "./types";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { writeFile } from "fs/promises";
 import { spawn } from 'child_process';
+import { Pool as PgPool } from 'pg';
 
 const s3 = new S3Client({});
 
@@ -30,18 +31,26 @@ async function saveSolution(id: string, content: string): Promise<string> {
 
 export async function submitSolutionHandler(
   event: GatewayEvent,
-  context: Context
+  context: Context,
+  pg: PgPool,
 ): Promise<any> {
+    // Debug
     console.log(event);
+
+    // Extract request info
     const content = JSON.stringify(event['body-json']);
     const solverName = event.params.querystring['solver'];
     const problemId = event.params.querystring['problem_id'];
 
+    // Save problem and solution on the file system
     const [problemPath, solutionPath] = await Promise.all([
         downloadProblem(parseInt(problemId)),
         saveSolution(`${solverName}-${problemId}`, content),
     ]);
 
+    // Run scorer
+    // /opt/scorer is provided by a Lambda layer.
+    // It's a x86_64 binary built from amylase/scorer/score.cpp
     const scorer = spawn('/opt/scorer', [problemPath, solutionPath]);
     const score = await new Promise((resolve, reject) => {
         scorer.stdout.on('data', (data) => {
@@ -55,6 +64,7 @@ export async function submitSolutionHandler(
 
     console.log(`score: ${score}`);
 
+    // Upload solution to S3
     const key = `solutions/${solverName}/${problemId}.json`;
     const command = new PutObjectCommand({
         Bucket: "icfpc2023-manarimo-3mrzsd",
@@ -67,6 +77,16 @@ export async function submitSolutionHandler(
         console.log(`Stored file as ${key}`);
     } catch (e) {
         console.error(e);
+    }
+
+    // Update solution database
+    const params = [solverName, parseInt(problemId), score, key];
+    try {
+        console.log(params);
+        const response = await pg.query('INSERT INTO solutions (solver_name, problem_id, score, solution_path) VALUES ($1, $2, $3, $4)', params);
+        console.log(response);
+    } catch (e) {
+        console.error(`pg error`, e);
     }
 
     return {
