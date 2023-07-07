@@ -1,18 +1,12 @@
 use std::path::Path;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-use crate::Result;
+use crate::{Result, P};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 pub(crate) struct Solution {
-    pub(crate) placements: Vec<Place>,
-}
-
-#[derive(Deserialize)]
-pub(crate) struct Place {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
+    pub(crate) placements: Vec<P>,
 }
 
 pub(crate) fn load_solution<P: AsRef<Path>>(path: P) -> Result<Solution> {

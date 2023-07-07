@@ -1,28 +1,26 @@
-use std::ops::Sub;
-
-use crate::{problem::Problem, solution::Solution};
+use crate::{problem::Problem, P};
 
 const BLOCK_DISTANCE: f64 = 5.0;
 
-pub(crate) fn score(problem: &Problem, solution: &Solution) -> f64 {
+pub(crate) fn score(problem: &Problem, placements: &[P]) -> f64 {
     let mut total_score = 0.0;
-    for i_musician in 0..solution.placements.len() {
-        total_score += single_score(problem, solution, i_musician);
+    for i_musician in 0..placements.len() {
+        total_score += single_score(problem, placements, i_musician);
     }
     total_score
 }
 
-pub(crate) fn single_score(problem: &Problem, solution: &Solution, i_musician: usize) -> f64 {
+fn single_score(problem: &Problem, placements: &[P], i_musician: usize) -> f64 {
     let mut score = 0.0;
-    let attendees = unblocked_attendees(problem, solution, i_musician);
+    let attendees = unblocked_attendees(problem, placements, i_musician);
     for i_attendee in attendees {
         let attendee = P {
             x: problem.attendees[i_attendee].x,
             y: problem.attendees[i_attendee].y,
         };
         let musician = P {
-            x: solution.placements[i_musician].x,
-            y: solution.placements[i_musician].y,
+            x: placements[i_musician].x,
+            y: placements[i_musician].y,
         };
 
         let taste = problem.attendees[i_attendee].tastes[problem.musicians[i_musician]];
@@ -31,11 +29,11 @@ pub(crate) fn single_score(problem: &Problem, solution: &Solution, i_musician: u
 
     score
 }
-fn unblocked_attendees(problem: &Problem, solution: &Solution, i_musician: usize) -> Vec<usize> {
+fn unblocked_attendees(problem: &Problem, placements: &[P], i_musician: usize) -> Vec<usize> {
     let mut unblocked = vec![];
     let center = P {
-        x: solution.placements[i_musician].x,
-        y: solution.placements[i_musician].y,
+        x: placements[i_musician].x,
+        y: placements[i_musician].y,
     };
 
     #[derive(Debug, Clone, Copy)]
@@ -58,7 +56,7 @@ fn unblocked_attendees(problem: &Problem, solution: &Solution, i_musician: usize
     }
 
     let mut overlapping_spans = 0;
-    for (j_musician, musician) in solution.placements.iter().enumerate() {
+    for (j_musician, musician) in placements.iter().enumerate() {
         if i_musician == j_musician {
             continue;
         }
@@ -117,33 +115,4 @@ fn normalize_angle(mut angle: f64) -> f64 {
         angle -= 2.0 * std::f64::consts::PI;
     }
     angle
-}
-
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct P {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
-}
-
-impl P {
-    fn arg(&self) -> f64 {
-        self.y.atan2(self.x)
-    }
-    fn abs(&self) -> f64 {
-        (self.x * self.x + self.y * self.y).sqrt()
-    }
-    fn d2(&self, rhs: &Self) -> f64 {
-        (self.x - rhs.x) * (self.x - rhs.x) + (self.y - rhs.y) * (self.y - rhs.y)
-    }
-}
-
-impl Sub for P {
-    type Output = P;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        P {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
-    }
 }
