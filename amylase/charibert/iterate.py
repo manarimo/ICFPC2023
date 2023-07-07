@@ -2,11 +2,10 @@ import subprocess
 import random
 import multiprocessing
 import sys
-import os
 from pathlib import Path
 
 
-script_dir = Path(__file__).parent
+script_dir = Path(__file__).parent.resolve()
 repositry_root = script_dir.parent.parent
 binary_path = script_dir / "iterate.exe"
 
@@ -19,7 +18,7 @@ def update(id: int):
 def ensure_binary():
     library_path = repositry_root / "library"
     judge_source_path = script_dir / "main.cpp"
-    subprocess.run(["c++", "-std=c++20", "-I" + str(library_path), "-O2", str(judge_source_path), "-o", str(binary_path)])
+    subprocess.run(["c++", "-std=c++17", "-I" + str(library_path), "-O2", str(judge_source_path), "-o", str(binary_path)])
 
 
 def main():
@@ -47,7 +46,7 @@ def main():
             if weight > 0:
                 weights[id] = weight
         
-        concurrency = min(multiprocessing.cpu_count(), len(weights))
+        concurrency = min(multiprocessing.cpu_count() - 1, len(weights))
         target_ids = []
         for _ in range(concurrency):
             to_choice = list(weights.keys())
