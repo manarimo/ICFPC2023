@@ -16,6 +16,7 @@ namespace manarimo {
     struct atendee_t {
         number x;
         number y;
+        P get_pos() { return P(x, y); }
         vector<number> tastes;
     };
 

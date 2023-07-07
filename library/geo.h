@@ -2,6 +2,7 @@
 #define ICFPC2021_GEO_H
 
 #include <vector>
+#include <cmath>
 
 #define X first
 #define Y second

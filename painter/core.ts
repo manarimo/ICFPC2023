@@ -2,7 +2,7 @@ import { serializeSvg } from "./codec.ts";
 import { Problem, Solution } from "./problem.ts";
 import { Svg } from "./svg.ts";
 
-async function load(inFile: string): Promise<Problem> {
+export async function loadProblem(inFile: string): Promise<Problem> {
     const json = await Deno.readTextFile(inFile);
     return JSON.parse(json) as Problem;
 }
@@ -14,7 +14,7 @@ async function loadSolution(inFile: string): Promise<Solution> {
 
 export async function processFile(problemFile: string, solutionFile: string | undefined, outFile: string): Promise<void> {
     console.log(`Loading ${problemFile}...`);
-    const problem = await load(problemFile);
+    const problem = await loadProblem(problemFile);
 
     let solution = undefined;
     if (solutionFile) {

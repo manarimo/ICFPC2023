@@ -3,6 +3,7 @@
     "download": "deno run --allow-all download.ts",
     "paint": "deno run --allow-all painter/cli.ts",
     "paint-all": "deno run --allow-all paint_all.ts",
-    "paint-solutions": "deno run --allow-all painter/paint_solutions.ts"
+    "paint-solutions": "deno run --allow-all painter/paint_solutions.ts",
+    "gen-portal": "deno run --allow-all public/gen.ts"
   }
 }
