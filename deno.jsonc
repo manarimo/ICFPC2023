@@ -1,5 +1,7 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "download": "deno run --allow-all download.ts",
+    "paint": "deno run --allow-all painter/cli.ts",
+    "paint-all": "deno run --allow-all paint_all.ts"
   }
 }
