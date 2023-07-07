@@ -50,7 +50,7 @@ const HomeContainer = () => {
             <Image
               width={400}
               height={200}
-              src={`/problems/images/${problem.id}.svg`}
+              src={`/public/problem_images/${problem.id}.svg`}
               alt=""
             />
           </td>
