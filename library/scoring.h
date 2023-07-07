@@ -109,7 +109,7 @@ namespace manarimo {
                     break;
                 case 1:
                     if (overlapping_spans == 0) {
-                        unblocked_attendees.emplace_back(musician_id, event_info.index);
+                        unblocked_attendees.push_back(event_info.index);
                     }
                     break;
                 case 2:
