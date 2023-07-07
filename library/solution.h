@@ -13,19 +13,38 @@ namespace manarimo {
     using json = nlohmann::json;
     using number = double;
 
-    struct solution_t {
-        vector<P> placements;
-        solution_t() {}
-        solution_t(const vector<P>& placements) : placements(placements) {}
+    struct P3 {
+        number x;
+        number y;
     };
 
-    void from_json(const json& j, P& p) {
-        j.at("x").get_to(p.first);
-        j.at("y").get_to(p.second);
+    struct solution_t {
+        vector<P3> placements;
+        vector<P> as_p() {
+            vector<P> ret;
+            for (P3 p : placements) {
+                ret.push_back(P(p.x, p.y));
+            }
+            return ret;
+        }
+        solution_t() {}
+        solution_t(const vector<P>& placements) {
+            for (auto p : placements) {
+                P3 p3;
+                p3.x = p.first;
+                p3.y = p.second;
+                this->placements.push_back(p3);
+            }
+        }
+    };
+
+    void to_json(json& j, const P3& p) {
+        j = json { {"x", p.x}, {"y", p.y} };
     }
 
-    void to_json(json& j, const P& p) {
-        j = json { {"x", p.first}, {"y", p.second} };
+    void from_json(const json& j, P3& p) {
+        j.at("x").get_to(p.x);
+        j.at("y").get_to(p.y);
     }
 
     void from_json(const json& j, solution_t& s) {
@@ -36,11 +55,6 @@ namespace manarimo {
         j["placements"] = s.placements;
     }
 
-    void load_solution(const string &filename, solution_t &out) {
-        ifstream f(filename);
-        return load_solution(filename, out);
-    }
-
     // problem_t が大きすぎて json::get<> で読むとスタックオーバーフローするので、出力先は引数で取る
     void load_solution(istream &f, solution_t &out) {
         json j;
@@ -48,6 +62,11 @@ namespace manarimo {
         from_json(j, out);
 
         // out.init();
+    }
+
+    void load_solution(const string &filename, solution_t &out) {
+        ifstream f(filename);
+        return load_solution(f, out);
     }
 
     void print_solution(ostream &f, const solution_t &val) {

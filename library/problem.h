@@ -58,11 +58,6 @@ namespace manarimo {
         j.at("attendees").get_to(p.attendees);
     }
 
-    void load_problem(const string &filename, problem_t &out) {
-        ifstream f(filename);
-        return load_problem(filename, out);
-    }
-
     // problem_t が大きすぎて json::get<> で読むとスタックオーバーフローするので、出力先は引数で取る
     void load_problem(istream &f, problem_t &out) {
         json j;
@@ -70,6 +65,11 @@ namespace manarimo {
         from_json(j, out);
 
         // out.init();
+    }
+
+    void load_problem(const string &filename, problem_t &out) {
+        ifstream f(filename);
+        return load_problem(f, out);
     }
 };
 
