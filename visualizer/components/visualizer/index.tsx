@@ -4,9 +4,10 @@ import React from "react";
 
 type Props = {
   problem: Parameters<typeof render>[1];
+  solution: Parameters<typeof render>[2];
 };
 
-const Canvas = ({ problem }: Props) => {
+const Canvas = ({ problem, solution }: Props) => {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   useEffect(() => {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
@@ -16,13 +17,11 @@ const Canvas = ({ problem }: Props) => {
 
   useEffect(() => {
     if (context) {
-      context.canvas.height = window.innerHeight - 10;
-      context.canvas.width = window.innerWidth - 10;
-      render(context, problem);
+      render(context, problem, solution);
     }
-  }, [context, problem]);
+  }, [context, problem, solution]);
 
-  return <canvas id="canvas" />;
+  return <canvas id="canvas" width="1000" height="1000" />;
 };
 
 export default Canvas;
