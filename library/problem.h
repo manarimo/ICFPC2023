@@ -53,8 +53,8 @@ namespace manarimo {
     };
 
     void from_json(const json& j, P& p) {
-        j.at(0).get_to(p.first);
-        j.at(1).get_to(p.second);
+        j.at(1).get_to(p.first);
+        j.at(0).get_to(p.second);
     }
 
     void from_json(const json& j, atendee_t& a) {
