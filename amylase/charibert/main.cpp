@@ -138,13 +138,13 @@ vector<geo::P> placements;
 void input() {
     manarimo::load_problem(std::cin, problem);
     
-    stage_left = problem.stage_bottom_left.Y;
+    stage_left = problem.stage_bottom_left.X;
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
     max_diff_width = (stage_right - stage_left) / 10;
     
-    stage_bottom = problem.stage_bottom_left.X;
+    stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;

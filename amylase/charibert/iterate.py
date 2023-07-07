@@ -40,7 +40,7 @@ def main():
                 str(repositry_root / "amylase" / "score" / "main.py"), 
                 str(repositry_root / "problems" / f"{id}.json"), 
                 str(target_dir / f"{id}.json"),
-                "--skip-validate"
+                # "--skip-validate"
             ], capture_output=True)
             score = int(result.stdout)
             weight = max(score, 0)
