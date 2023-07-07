@@ -1,3 +1,4 @@
+import SubmissionFormContainer from "@/containers/submit";
 import HomeContainer from "@/containers/top";
 import "@/styles/Home.module.css";
 
@@ -39,6 +40,7 @@ export default function Home() {
           </span>
         </span>
       </h1>
+      <SubmissionFormContainer />
       <HomeContainer />
     </div>
   );
