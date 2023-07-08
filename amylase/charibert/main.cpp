@@ -79,21 +79,23 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double START_TEMP = 100000;
     constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
+    double start_temp;
     double log_probability[LOG_SIZE + 1];
     long long iteration = 0;
     long long accepted = 0;
     long long rejected = 0;
     double time = 0;
-    double temp = START_TEMP;
+    double temp;
     timer sa_timer;
 };
 
 simulated_annealing::simulated_annealing(double time_limit) : time_limit(time_limit) {
-    temp_ratio = (END_TEMP - START_TEMP) / time_limit;
+    start_temp = pow(10, random::get_double(3, 5));
+    temp = start_temp;
+    temp_ratio = (END_TEMP - start_temp) / time_limit;
     sa_timer.start();
     for (int i = 0; i <= LOG_SIZE; i++) log_probability[i] = log(random::probability());
 }
@@ -102,7 +104,7 @@ inline bool simulated_annealing::end() {
     iteration++;
     if ((iteration & UPDATE_INTERVAL) == 0) {
         time = sa_timer.get_time();
-        temp = START_TEMP + temp_ratio * time;
+        temp = start_temp + temp_ratio * time;
         return time >= time_limit;
     } else {
         return false;
