@@ -4,6 +4,11 @@ export interface Attendee {
     tastes: number[];
 }
 
+export interface Pillar {
+    center: [number, number];
+    radius: number;
+}
+
 export interface Problem {
     room_width: number;
     room_height: number;
@@ -12,6 +17,7 @@ export interface Problem {
     stage_bottom_left: [number, number];
     musicians: number[];
     attendees: Attendee[];
+    pillars: Pillar[];
 }
 
 export interface Point {

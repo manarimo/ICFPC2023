@@ -54,6 +54,16 @@ export async function processFile(problemFile: string, solutionFile: string | un
         });
     }
 
+    // Draw pillars
+    for (const pillar of problem.pillars) {
+        svg.circle({
+            x: pillar.center[0],
+            y: problem.room_height - pillar.center[1],
+            radius: pillar.radius,
+            fill: 'red'
+        });
+    }
+
     if (solution) {
         // Draw solutions
         for (const p of solution.placements) {
