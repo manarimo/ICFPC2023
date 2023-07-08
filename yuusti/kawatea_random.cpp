@@ -78,7 +78,7 @@ class simulated_annealing {
     public:
     simulated_annealing(double time_limit);
     inline bool end();
-    inline bool accept(double current_score, double next_score);
+    inline bool accept(double current_score, double next_score, int type);
     void print() const;
     
     private:
@@ -93,6 +93,8 @@ class simulated_annealing {
     long long iteration = 0;
     long long accepted = 0;
     long long rejected = 0;
+    map<int, long long> accepted_map;
+    map<int, long long> rejected_map;
     double time = 0;
     double temp = START_TEMP;
     timer sa_timer;
@@ -115,13 +117,16 @@ inline bool simulated_annealing::end() {
     }
 }
 
-inline bool simulated_annealing::accept(double current_score, double next_score) {
+inline bool simulated_annealing::accept(double current_score, double next_score, int type) {
     double diff = (MAXIMIZE ? next_score - current_score : current_score - next_score);
     if (diff >= 0 || diff > log_probability[random::get_fast(LOG_SIZE)] * temp) {
         accepted++;
+        accepted_map[type]++;
+
         return true;
     } else {
         rejected++;
+        rejected_map[type]++;
         return false;
     }
 }
@@ -129,11 +134,17 @@ inline bool simulated_annealing::accept(double current_score, double next_score)
 void simulated_annealing::print() const {
     fprintf(stderr, "iteration: %lld\n", iteration);
     fprintf(stderr, "accepted: %lld\n", accepted);
+    for (auto& e: accepted_map) {
+        fprintf(stderr, "\taccepted-%d: %lld\n", e.first, e.second);        
+    }
     fprintf(stderr, "rejected: %lld\n", rejected);
+    for (auto& e: rejected_map) {
+        fprintf(stderr, "\trejected-%d: %lld\n", e.first, e.second);        
+    }
 }
 
 const double INIT_TIME_LIMIT = 20;
-const double MAIN_TIME_LIMIT = 30;
+const double MAIN_TIME_LIMIT = 120;
 const int MAX_MUSICIAN = 1500;
 const int MAX_ATTENDEE = 5000;
 const double RADIUS = 10;
@@ -162,17 +173,23 @@ void input() {
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
-    max_diff_width = (stage_right - stage_left) / 50;
+    max_diff_width = 0.5;
     
     stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
-    max_diff_height = (stage_top - stage_bottom) / 50;
+    max_diff_height = 0.5;
 }
 
 void output(const vector<geo::P>& placements) {
     manarimo::print_solution(std::cout, manarimo::solution_t(placements));
+}
+
+void store_to_file(const vector<geo::P>& placements, const string file_name) {
+    std::ofstream ofs(file_name);
+
+    manarimo::print_solution(ofs, manarimo::solution_t(placements));
 }
 
 double dist2(const geo::P& p1, const geo::P& p2) {
@@ -322,7 +339,7 @@ void sa_no_block() {
             double next_score = current_score;
             next_score -= score_one_no_block(current_p, problem.musicians[m]);
             next_score += score_one_no_block(next_p, problem.musicians[m]);
-            if (sa.accept(current_score, next_score)) {
+            if (sa.accept(current_score, next_score, 0)) {
                 current_score = next_score;
                 placements[m] = next_p;
                 if (current_score > best_score) {
@@ -340,7 +357,7 @@ void sa_no_block() {
             next_score -= score_one_no_block(placements[m2], problem.musicians[m2]);
             next_score += score_one_no_block(placements[m1], problem.musicians[m2]);
             next_score += score_one_no_block(placements[m2], problem.musicians[m1]);
-            if (sa.accept(current_score, next_score)) {
+            if (sa.accept(current_score, next_score, 1)) {
                 current_score = next_score;
                 swap(placements[m1], placements[m2]);
                 if (current_score > best_score) {
@@ -374,7 +391,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "score at load : %lf\n", best_score);
     }
 
-    for (int times = 20; times > 0; --times) {
+    double init_best = best_score;
+
+    for (int times = 0; times < 1000; ++times) {
         double current_score = best_score;
         
         int unchanged = 0;
@@ -388,7 +407,8 @@ int main(int argc, char *argv[]) {
                 unchanged = 0;
             }
             
-            if (random::get(100) < 80) {
+            auto x = random::get(100);
+            if (x < 80) {
                 int m = random::get(problem.musicians.size());
                 geo::P& current_p = placements[m];
                 double dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
@@ -439,7 +459,7 @@ int main(int argc, char *argv[]) {
                         if (blocked_count[i][attendee] == 0) next_score -= calc_one_score(placements[i], problem.attendees[attendee].pos, problem.attendees[attendee].tastes[problem.musicians[i]]);
                     }
                 }
-                if (sa.accept(current_score, next_score)) {
+                if (sa.accept(current_score, next_score, 0)) {
                     current_score = next_score;
                     placements[m] = next_p;
                     swap(attendee_angles[m], tmp_attendee_angles);
@@ -482,7 +502,7 @@ int main(int argc, char *argv[]) {
                         }
                     }
                 }
-                if (sa.accept(current_score, next_score)) {
+                if (sa.accept(current_score, next_score, 1)) {
                     current_score = next_score;
                     swap(placements[m1], placements[m2]);
                     attendee_angles[m1].swap(attendee_angles[m2]);
@@ -502,8 +522,12 @@ int main(int argc, char *argv[]) {
             }
         }
         fprintf(stderr, "best_score : %lf\n", best_score);
+        fprintf(stderr, "best_score increase so far : %lf\n", best_score - init_best);
+
+        store_to_file(best_placements, string(argv[1]) + "." + to_string(times) + ".json");
         sa.print();
     }
+
     output(best_placements);
     
     return 0;
