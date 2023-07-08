@@ -61,7 +61,7 @@ namespace manarimo {
         stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second});
         stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second + stage_height});
 
-        for (auto corner : stage_corners) {
+        for (const auto& corner : stage_corners) {
             if (dist_line(attendee.pos, corner, pillar.center) < pillar.radius * pillar.radius) {
                 return true;
             }
@@ -265,14 +265,14 @@ namespace manarimo {
 
     long long score(const problem_t& problem, const vector<P>& placements) {
         map<int, vector<int>> instrument_groups;
-        for (int musician_id = 0; musician_id < problem.musicians.size(); musician_id++) {
+        for (int musician_id = 0; musician_id < (int) problem.musicians.size(); musician_id++) {
             instrument_groups[problem.musicians[musician_id]].push_back(musician_id);
         }
         vector<number> closeness(problem.musicians.size(), 1);
         if (problem.playing_together) {
             for (const auto& group : instrument_groups) {
                 const auto& musician_ids = group.second;
-                for (int j = 0; j < musician_ids.size(); j++) {
+                for (int j = 0; j < (int) musician_ids.size(); j++) {
                     for (int i = 0; i < j; i++) {
                         const number distance = sqrt(d(placements[musician_ids[i]], placements[musician_ids[j]]));
                         closeness[musician_ids[i]] += 1. / distance;
@@ -289,7 +289,7 @@ namespace manarimo {
             const int i_musician = unblocked_pair.first;
             const int i_attendee = unblocked_pair.second;
             const P attendee_location = {problem.attendees[i_attendee].x, problem.attendees[i_attendee].y};
-            score += ceil(1000000 * closeness[i_musician] * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician]));
+            score += ceil(closeness[i_musician] * ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician])));
         }
         return score;
     }

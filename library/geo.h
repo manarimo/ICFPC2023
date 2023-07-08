@@ -62,7 +62,7 @@ namespace geo {
 
     bool is_in_convex(const vector<P>& convex, const P& p) {
         vector<number> ccws;
-        for (int i = 0; i < convex.size(); i++) {
+        for (int i = 0; i < (int) convex.size(); i++) {
             int j = (i + 1) % convex.size();
             ccws.push_back(ccw(convex[i], convex[j], p));
         }
