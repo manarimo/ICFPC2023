@@ -224,9 +224,9 @@ void calc_blocked_one(int musician, const geo::P& p, vector<pair<double, int>>& 
             start += M_PI * 2;
             end += M_PI * 2;
         }
-        int index = lower_bound(attendee_angles.begin(), attendee_angles.end(), make_pair(start, -1)) - attendee_angles.begin();
+        int index = lower_bound(attendee_angles.begin(), attendee_angles.end(), make_pair(start, 100000000)) - attendee_angles.begin();
         for (; index < attendee_angles.size(); index++) {
-            if (attendee_angles[index].first > end) break;
+            if (attendee_angles[index].first >= end) break;
             blocked_attendees[i].push_back(attendee_angles[index].second);
             blocked_count[attendee_angles[index].second]++;
         }
@@ -423,9 +423,9 @@ int main(int argc, char *argv[]) {
                     start += M_PI * 2;
                     end += M_PI * 2;
                 }
-                int index = lower_bound(attendee_angles[i].begin(), attendee_angles[i].end(), make_pair(start, -1)) - attendee_angles[i].begin();
+                int index = lower_bound(attendee_angles[i].begin(), attendee_angles[i].end(), make_pair(start, 100000000)) - attendee_angles[i].begin();
                 for (; index < attendee_angles[i].size(); index++) {
-                    if (attendee_angles[i][index].first > end) break;
+                    if (attendee_angles[i][index].first >= end) break;
                     int attendee = attendee_angles[i][index].second;
                     new_blocked.emplace_back(i, attendee);
                     if (blocked_count[i][attendee] == 0) next_score -= calc_one_score(placements[i], problem.attendees[attendee].pos, problem.attendees[attendee].tastes[problem.musicians[i]]);
