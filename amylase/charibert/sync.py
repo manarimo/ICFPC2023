@@ -19,6 +19,8 @@ def score(problem_file: Path, solution_file: Path) -> int:
 
 def main():
     best_dir = repositry_root / "solutions" / "synced-bests"
+    delta = 0
+    synced = 0
     for sync_solution_file in best_dir.iterdir():
         if not sync_solution_file.name.endswith(".json"):
             continue
@@ -31,6 +33,12 @@ def main():
         if sync_score > my_score:
             print(f"syncing {problem_id}: {my_score} -> {sync_score}")
             shutil.copy(sync_solution_file, my_solution_file)
+            synced += 1
+        else:
+            print(f"not syncing {problem_id}: {my_score} > {sync_score} (+{my_score - sync_score})")
+            delta += my_score - sync_score
+    print(f"the next submission will improve the global score by {delta}")
+    print(f"synced {synced} files")
 
 
 
