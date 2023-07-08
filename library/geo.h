@@ -61,15 +61,13 @@ namespace geo {
     }
 
     bool is_in_convex(const vector<P>& convex, const P& p) {
-        vector<number> crosses;
+        vector<number> ccws;
         for (int i = 0; i < convex.size(); i++) {
             int j = (i + 1) % convex.size();
-            const P v1(convex[i].first - p.first, convex[i].second - p.second);
-            const P v2(convex[j].first - p.first, convex[j].second - p.second);
-            crosses.push_back(cross(v1, v2));
+            ccws.push_back(ccw(convex[i], convex[j], p));
         }
-        const number max = *max_element(crosses.begin(), crosses.end());
-        const number min = *min_element(crosses.begin(), crosses.end());
+        const number max = *max_element(ccws.begin(), ccws.end());
+        const number min = *min_element(ccws.begin(), ccws.end());
 
         return max <= 0 || min >= 0;
     }

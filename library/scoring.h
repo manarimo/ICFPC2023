@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <complex>
 #include <cmath>
-
+#include <iostream>
 namespace manarimo {
     using namespace std;
     using namespace geo;
@@ -59,7 +59,7 @@ namespace manarimo {
         stage_corners.push_back(stage_bottom_left);
         stage_corners.push_back({stage_bottom_left.first, stage_bottom_left.second + stage_height});
         stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second});
-        stage_corners.push_back({stage_bottom_left.first + stage_height, stage_bottom_left.second + stage_height});
+        stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second + stage_height});
         
         for (auto corner : stage_corners) {
             if (dist_line(attendee.pos, corner, pillar.center) < pillar.radius * pillar.radius) {
@@ -67,13 +67,10 @@ namespace manarimo {
             }
         }
 
-        vector<pair<number, P>> stage_corners_by_distance;
-        for (auto corner : stage_corners) {
-            stage_corners_by_distance.emplace_back(d(corner, attendee.pos), corner);
+        if (is_in_convex({attendee.pos, stage_corners[0], stage_corners[3]}, pillar.center)) {
+            return true;
         }
-        sort(stage_corners_by_distance.begin(), stage_corners_by_distance.end());
-
-        if (is_in_convex({attendee.pos, stage_corners_by_distance[1].second, stage_corners_by_distance[2].second}, pillar.center)) {
+        if (is_in_convex({attendee.pos, stage_corners[1], stage_corners[2]}, pillar.center)) {
             return true;
         }
         return false;
@@ -260,6 +257,7 @@ namespace manarimo {
             pillar_unblocked_pairs.begin(), pillar_unblocked_pairs.end(),
             std::inserter(unblocked_pairs, unblocked_pairs.end())
         );
+        cerr << musician_unblocked_pairs.size() << " " << pillar_unblocked_pairs.size() << " " << unblocked_pairs.size() << endl;
 
         return unblocked_pairs;
     }
