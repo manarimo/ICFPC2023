@@ -10,19 +10,36 @@ repositry_root = script_dir.parent.parent
 binary_path = script_dir / "iterate.exe"
 
 
+target_type = "lightning"
+
+
 def update(id: int):
     key = random.randint(1, 10000000)
-    subprocess.run(f"{str(binary_path)} ../../solutions/charibert/{id}.json < ../../problems/{id}.json > {id}_{key}.json && mv {id}_{key}.json ../../solutions/charibert/{id}.json", shell=True)
+    try:
+        subprocess.run(f"{str(binary_path)} ../../solutions/charibert/{id}.json < ../../problems/{id}.json > {id}_{key}.json && mv {id}_{key}.json ../../solutions/charibert/{id}.json", shell=True)
+    except Exception as _e:
+        subprocess.run(f"rm {id}_{key}.json", shell=True)
 
 
 def ensure_binary():
     library_path = repositry_root / "library"
-    judge_source_path = script_dir / "main.cpp"
+    judge_source_path = script_dir / ("main.cpp" if target_type == "lightning" else "block_pillar.cpp")
     subprocess.run(["c++", "-std=c++17", "-I" + str(library_path), "-O2", str(judge_source_path), "-o", str(binary_path)])
 
 
+def id_filter(problem_id: int) -> bool:
+    if target_type == "lightning":
+        return 1 <= problem_id <= 55
+    else:
+        return 56 <= problem_id <= 90
+
+
 def main():
+    global target_type
     target_dir = Path(sys.argv[1])
+    if len(sys.argv) >= 3:
+        target_type = sys.argv[2].strip()
+
     ensure_binary()
 
     problem_ids = []
@@ -30,7 +47,8 @@ def main():
         if not file.name.endswith(".json"):
             continue
         problem_ids.append(int(file.name.replace(".json", "")))
-    
+    problem_ids = [i for i in problem_ids if id_filter(i)]
+
     while True:
         weights = {}
         for id in problem_ids:
