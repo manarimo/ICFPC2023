@@ -1,8 +1,9 @@
 import json
 import sys
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 import numpy as np
 import scipy.optimize
+import itertools
 
 
 Point = Tuple[float, float]
@@ -61,16 +62,27 @@ def distance(p: Point, q: Point) -> float:
     return square_distance(p, q) ** 0.5
 
 
-def evaluate(problem: Problem, solution: Solution) -> float:
+def score(problem: Problem, solution: Solution) -> float:
     # todo: implement block
     score = 0
     for musician, placement in zip(problem.musicians, solution.placements):
         for attendee in problem.attendees:
             score += attendee.tastes[musician.instrument] / square_distance(placement, attendee.position)
-    return -score
+    return score
 
 
-def solve(problem: Problem) -> Solution:
+def evaluate(problem: Problem, solution: Solution) -> float:
+    penalty = -score(problem, solution)
+
+    # penalty
+    penalty_threshold = 15
+    penalty_weight = 0.4
+    for placement1, placement2 in itertools.combinations(solution.placements, r=2):
+        penalty += penalty_weight * max(penalty_threshold - distance(placement1, placement2), 0)
+    return penalty
+
+
+def solve(problem: Problem, solution: Optional[Solution] = None) -> Solution:
     def arg_to_solution(x: np.ndarray) -> Solution:
         placements = []
         for i in range(len(problem.musicians)):
@@ -86,27 +98,36 @@ def solve(problem: Problem) -> Solution:
     for _ in problem.musicians:
         bounds.append((problem.stage.left_bottom[0] + min_distance, problem.stage.right_top[0] - min_distance))
         bounds.append((problem.stage.left_bottom[1] + min_distance, problem.stage.right_top[1] - min_distance))
-    constraints = []
 
-    def fun_factory(i, j):
-        def fun(x):
-            return (x[2 * i] - x[2 * j]) ** 2 + (x[2 * i + 1] - x[2 * j + 1]) ** 2 - min_distance ** 2
-        return fun
-    for j in range(len(problem.musicians)):
-        for i in range(j):
-            constraints.append({
-                "type": "ineq",
-                "fun": fun_factory(i, j),
-            })
+    if solution is not None:
+        vec = []
+        for placement in solution.placements:
+            vec += list(placement)
+        initial = np.array(vec)
+    else:
+        initial = np.zeros((2 * len(problem.musicians), ))
+    res = scipy.optimize.minimize(objective, initial, bounds=bounds, options={"disp": True})
+    print(f"score = {score(problem, arg_to_solution(res.x))}, penalty = {evaluate(problem, arg_to_solution(res.x))}", file=sys.stderr)
+    for m1, m2 in itertools.combinations(range(len(problem.musicians)), r=2):
+        x = res.x
+        dsq = (x[2 * m1] - x[2 * m2]) ** 2 + (x[2 * m1 + 1] - x[2 * m2 + 1]) ** 2 
+        if dsq < min_distance ** 2:
+            print(f"constraint violation: {m1} {m2}, d = {dsq ** 0.5}", file=sys.stderr)
 
-    res = scipy.optimize.minimize(objective, np.zeros((2 * len(problem.musicians), )), bounds=bounds, constraints=constraints, method="trust-constr", options={"disp": True})
     return arg_to_solution(res.x)
 
 
 def main():
     problem_dict = json.load(sys.stdin)
     problem = Problem(problem_dict)
-    solution = solve(problem)
+    if len(sys.argv) >= 2:
+        with open(sys.argv[1]) as f:
+            intermediate_solution_dict = json.load(f)
+            placements = [(placement["x"], placement["y"]) for placement in intermediate_solution_dict["placements"]]
+            intermediate_solution = Solution(placements=placements)
+    else:
+        intermediate_solution = None
+    solution = solve(problem, intermediate_solution)
     solution_dict = solution.to_dict()
     json.dump(solution_dict, sys.stdout)
 

@@ -34,7 +34,10 @@ export async function handler(
 
   return {
     body: JSON.stringify(result),
-    headers: { "content-type": "application/json;charset=utf8" },
+    headers: {
+      "content-type": "application/json;charset=utf8",
+      "Access-Control-Allow-Origin": "*",
+    },
     statusCode: 200,
   };
 }
@@ -78,7 +81,7 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         id,
         solverName: solver_name,
         problemId: problem_id,
-        score,
+        score: Number(score),
         solutionPath: solution_path,
       }));
       return {
