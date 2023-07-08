@@ -1,5 +1,5 @@
+import HomeContainer from "@/containers/home";
 import SubmissionFormContainer from "@/containers/submit";
-import HomeContainer from "@/containers/top";
 import "@/styles/Home.module.css";
 
 export default function Home() {

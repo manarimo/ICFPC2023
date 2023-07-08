@@ -5,24 +5,30 @@ type Props = {
 };
 
 const SubmissionForm = ({ problemIds }: Props) => {
+  const [solverName, setSolverName] = useState<string>("manarimo-solver");
   const [problemId, setProblemId] = useState<string>("1");
   const [file, setFile] = useState<File>();
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
-        const formData = new FormData();
-        formData.append("problemId", problemId);
         if (file) {
-          formData.append("solution", file);
+          const content = await readFile(file);
+          await fetch(
+            `https://vwbqm1f1u5.execute-api.ap-northeast-1.amazonaws.com/prod/solutions/submit?solver=${solverName}&problem_id=${problemId}`,
+            {
+              method: "POST",
+              body: content,
+            }
+          );
         }
-        const request = new Request("/api/file", {
-          method: "POST",
-          body: formData,
-        });
-        const response = await fetch(request);
       }}
     >
+      <input
+        type="input"
+        value={solverName}
+        onChange={(e) => setSolverName(e.target.value)}
+      />
       <input
         type="file"
         name="solution"
@@ -41,7 +47,7 @@ const SubmissionForm = ({ problemIds }: Props) => {
           </option>
         ))}
       </select>
-      <button type="submit" disabled={!file}>
+      <button type="submit" disabled={!file || !solverName}>
         Submit
       </button>
     </form>
@@ -49,3 +55,22 @@ const SubmissionForm = ({ problemIds }: Props) => {
 };
 
 export default SubmissionForm;
+
+const readFile = (file: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+      const { result } = reader;
+      if (typeof result !== "string")
+        throw TypeError("Reader did not return string.");
+      resolve(result);
+    });
+
+    reader.addEventListener("error", () => {
+      reject(reader.error);
+    });
+
+    reader.readAsText(file);
+  });
+};
