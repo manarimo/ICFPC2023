@@ -375,7 +375,6 @@ int main(int argc, char *argv[]) {
     }
 
     for (int times = 20; times > 0; --times) {
-        double best_score = score_all();
         double current_score = best_score;
         
         int unchanged = 0;
