@@ -59,5 +59,19 @@ namespace geo {
         double y = p1.Y + t * (p2.Y - p1.Y) * 2 - p.Y;
         return make_pair(round(x), round(y));
     }
+
+    bool is_in_convex(const vector<P>& convex, const P& p) {
+        vector<number> crosses;
+        for (int i = 0; i < convex.size(); i++) {
+            int j = (i + 1) % convex.size();
+            const P v1(convex[i].first - p.first, convex[i].second - p.second);
+            const P v2(convex[j].first - p.first, convex[j].second - p.second);
+            crosses.push_back(cross(v1, v2));
+        }
+        const number max = *max_element(crosses.begin(), crosses.end());
+        const number min = *min_element(crosses.begin(), crosses.end());
+
+        return max <= 0 || min >= 0;
+    }
 };
 #endif //ICFPC2021_GEO_H
