@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include "../../library/problem.h"
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
@@ -68,6 +69,14 @@ class random {
     }
 };
 
+const char* getenv_or(const char* varname, const char* fallback) {
+    const char* value = getenv(varname);
+    return (value != nullptr) ? value : fallback;
+}
+
+const double START_TEMP = atof(getenv_or("START_TEMP", "10000"));
+const double END_TEMP = atof(getenv_or("END_TEMP", "1e-9"));
+
 class simulated_annealing {
     public:
     simulated_annealing(double time_limit);
@@ -79,8 +88,6 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double START_TEMP = 10000;
-    constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
     double log_probability[LOG_SIZE + 1];
@@ -126,8 +133,8 @@ void simulated_annealing::print() const {
     fprintf(stderr, "rejected: %lld\n", rejected);
 }
 
-const double INIT_TIME_LIMIT = 10;
-const double MAIN_TIME_LIMIT = 100;
+const double INIT_TIME_LIMIT = atof(getenv_or("INIT_TIME_LIMIT", "10"));
+const double MAIN_TIME_LIMIT = atof(getenv_or("MAIN_TIME_LIMIT", "100"));
 const int MAX_MUSICIAN = 1500;
 const int MAX_ATTENDEE = 5000;
 const double RADIUS = 10;
@@ -138,8 +145,8 @@ double stage_left;
 double stage_right;
 double stage_bottom;
 double stage_top;
-double max_diff_width;
-double max_diff_height;
+const double max_diff_width = atof(getenv_or("MAX_DIFF_DISTANCE", "1"));
+const double max_diff_height = atof(getenv_or("MAX_DIFF_DISTANCE", "1"));
 vector<geo::P> placements;
 vector<pair<double, int>> attendee_angles[MAX_MUSICIAN];
 vector<int> blocked_attendees[MAX_MUSICIAN][MAX_MUSICIAN];
@@ -156,13 +163,11 @@ void input() {
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
-    max_diff_width = 1;
     
     stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
-    max_diff_height = 1;
 }
 
 void output(const vector<geo::P>& placements) {
