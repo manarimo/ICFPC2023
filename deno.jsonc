@@ -6,6 +6,7 @@
     "paint-solutions": "deno run --allow-all painter/paint_solutions.ts",
     "gen-portal": "deno run --allow-all public/gen.ts",
     "gen-problem-index": "deno run --allow-all public/gen_problem_index.ts",
-    "submit-bulk": "deno run --allow-all scripts/submit_bulk.ts"
+    "submit-bulk": "deno run --allow-all scripts/submit_bulk.ts",
+    "sync-bests": "deno run --allow-all scripts/sync_bests.ts"
   }
 }
