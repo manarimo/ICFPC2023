@@ -2,6 +2,7 @@ import subprocess
 import random
 import multiprocessing
 import sys
+import os
 from pathlib import Path
 
 
@@ -14,10 +15,14 @@ target_type = "lightning"
 
 
 def update(id: int):
+    my_env = os.environ.copy()
+    my_env["MAX_DIFF_DISTANCE"] = random.choice(["1", "10", "100"])
+    my_env["START_TEMP"] = random.choice(["10000", "1e9"])
+
     key = random.randint(1, 10000000)
     try:
-        subprocess.run(f"{str(binary_path)} ../../solutions/charibert/{id}.json < ../../problems/{id}.json > {id}_{key}.json && mv {id}_{key}.json ../../solutions/charibert/{id}.json", shell=True)
-    except Exception as _e:
+        subprocess.run(f"{str(binary_path)} ../../solutions/charibert/{id}.json < ../../problems/{id}.json > {id}_{key}.json && mv {id}_{key}.json ../../solutions/charibert/{id}.json", shell=True, env=my_env)
+    except KeyboardInterrupt as _e:
         subprocess.run(f"rm {id}_{key}.json", shell=True)
 
 

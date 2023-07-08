@@ -13,6 +13,8 @@ pub struct Problem {
     pub(crate) stage_bottom_left: (f64, f64),
     pub(crate) musicians: Vec<usize>,
     pub(crate) attendees: Vec<Attendee>,
+    pub pillars: Vec<Pillar>,
+    pub playing_together: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -21,6 +23,9 @@ pub struct Attendee {
     pub(crate) y: f64,
     pub(crate) tastes: Vec<f64>,
 }
+
+#[derive(Deserialize)]
+pub struct Pillar {}
 
 pub fn load_problem<P: AsRef<Path>>(path: P) -> Result<Problem> {
     let mut file = std::fs::File::open(path)?;
