@@ -42,6 +42,8 @@ namespace manarimo {
         vector<int> musicians;
         vector<atendee_t> attendees;
         vector<pillar_t> pillars;
+
+        bool playing_together;
     };
 
     void from_json(const json& j, P2& p) {
@@ -70,6 +72,9 @@ namespace manarimo {
         j.at("musicians").get_to(p.musicians);
         j.at("attendees").get_to(p.attendees);
         j.at("pillars").get_to(p.pillars);
+        if (j.count("playing_together")) {
+            j.at("playing_together").get_to(p.playing_together);
+        }
     }
 
     // problem_t が大きすぎて json::get<> で読むとスタックオーバーフローするので、出力先は引数で取る
