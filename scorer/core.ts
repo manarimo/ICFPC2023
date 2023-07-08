@@ -19,7 +19,7 @@ function singleScore(
   const attendees = unblockedAttendees(problem, placements, musicianId);
   for (const attendee of attendees) {
     const musician = placements[musicianId];
-    const taste = attendee.tastes[musicianId];
+    const taste = attendee.tastes[problem.musicians[musicianId]];
     score += Math.ceil(1000000 * taste / dist2(attendee, musician));
   }
   return score;
