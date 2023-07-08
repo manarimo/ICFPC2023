@@ -36,20 +36,31 @@ pub fn simulated_annealing2(problem: &Problem, solution: &Solution) -> (Solution
             );
         }
 
-        let m = if rng.gen_bool(0.2) {
-            let i = rng.gen_range(0..state.placements.len());
-            let j = rng.gen_range(0..state.placements.len());
+        let n = state.placements.len();
+        let mut scores = vec![(0, 0.0); n];
+        for i in 0..n {
+            scores[i] = (i, score::single_score(&problem, &state.placements, i));
+        }
+        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+
+        let top = (n / 10).max(10).min(n);
+
+        let mv = if rng.gen_bool(0.2) {
+            let i = rng.gen_range(0..top);
+            let j = rng.gen_range(0..top);
+            let (i, j) = (scores[i].0, scores[j].0);
             Move::Swap { i, j }
         } else {
-            let i = rng.gen_range(0..state.placements.len());
+            let i = rng.gen_range(0..top);
+            let i = scores[i].0;
             let d = rng.gen_range(-1.0..1.0);
             let to_x = rng.gen_bool(0.5);
             Move::Shift { i, to_x, d }
         };
 
-        state.move_forward(m);
+        state.move_forward(mv);
         if !state.is_valid(problem) {
-            state.move_backward(m);
+            state.move_backward(mv);
             continue;
         }
 
@@ -66,7 +77,7 @@ pub fn simulated_annealing2(problem: &Problem, solution: &Solution) -> (Solution
                 best = state.clone();
             }
         } else {
-            state.move_backward(m);
+            state.move_backward(mv);
         }
     }
     (

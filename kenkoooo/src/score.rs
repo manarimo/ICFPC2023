@@ -10,7 +10,7 @@ pub fn score(problem: &Problem, placements: &[P]) -> f64 {
     total_score
 }
 
-fn single_score(problem: &Problem, placements: &[P], i_musician: usize) -> f64 {
+pub fn single_score(problem: &Problem, placements: &[P], i_musician: usize) -> f64 {
     let mut score = 0.0;
     let attendees = unblocked_attendees(problem, placements, i_musician);
     for i_attendee in attendees {
