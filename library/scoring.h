@@ -259,7 +259,6 @@ namespace manarimo {
             pillar_unblocked_pairs.begin(), pillar_unblocked_pairs.end(),
             std::inserter(unblocked_pairs, unblocked_pairs.end())
         );
-        cerr << musician_unblocked_pairs.size() << " " << pillar_unblocked_pairs.size() << " " << unblocked_pairs.size() << endl;
 
         return unblocked_pairs;
     }
@@ -275,9 +274,9 @@ namespace manarimo {
                 const auto& musician_ids = group.second;
                 for (int j = 0; j < musician_ids.size(); j++) {
                     for (int i = 0; i < j; i++) {
-                        const number distance = sqrt(d(placements[i], placements[j]));
-                        closeness[i] += 1. / distance;
-                        closeness[j] += 1. / distance;
+                        const number distance = sqrt(d(placements[musician_ids[i]], placements[musician_ids[j]]));
+                        closeness[musician_ids[i]] += 1. / distance;
+                        closeness[musician_ids[j]] += 1. / distance;
                     }
                 }
             }
