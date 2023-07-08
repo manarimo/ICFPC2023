@@ -6,7 +6,10 @@
   "scripts": {
     "prebuild": "rm -rf dist",
     "build": "esbuild lambda.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
-    "postbuild": "cd dist && zip -r index.zip index.js*"
+    "postbuild": "cd dist && zip -r index.zip index.js*",
+    "prebuild_runner": "rm -rf dist",
+    "build_runner": "esbuild solver_runner/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild_runner": "cd dist && zip -r index_runner.zip index.js*"
   },
   "author": "",
   "license": "ISC",
