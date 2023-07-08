@@ -34,15 +34,19 @@ pub fn is_valid(problem: &Problem, placements: &[P]) -> bool {
     true
 }
 
-pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
+pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> (Solution, f64) {
     let placements = solution.placements.clone();
     let score = score::score(&problem, &placements);
 
-    const TIME_LIMIT: f64 = 60.0;
     let start_temp = std::env::var("START_TEMP")
         .ok()
         .and_then(|s| s.parse::<f64>().ok())
         .unwrap_or(1e4);
+    let time_limit = std::env::var("TIME_LIMIT")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(60.0);
+    log::info!("start_temp={} time_limit={}", start_temp, time_limit);
     const END_TEMP: f64 = 1.0;
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -52,10 +56,10 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
     let mut prev = Instant::now();
     let mut total_trial = 0.0;
     let mut accepted = 0.0;
-    while start_time.elapsed().as_secs_f64() < TIME_LIMIT {
+    while start_time.elapsed().as_secs_f64() < time_limit {
         if prev.elapsed().as_secs() > 3 {
             prev = Instant::now();
-            log::info!(
+            log::debug!(
                 "best_score={} accepted={}",
                 best.score,
                 accepted / total_trial
@@ -73,7 +77,7 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
 
         let new_score = score::score(&problem, &state.placements);
         let temp =
-            start_temp + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / TIME_LIMIT;
+            start_temp + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / time_limit;
         let prob = ((new_score - state.score) / temp).exp();
 
         total_trial += 1.0;
@@ -87,9 +91,12 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
             state.move_back(i, to_x, d);
         }
     }
-    Solution {
-        placements: best.placements,
-    }
+    (
+        Solution {
+            placements: best.placements,
+        },
+        accepted / total_trial,
+    )
 }
 
 #[derive(Clone)]

@@ -84,7 +84,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);
             loop {
-                solution = simulated_annealing(&problem, &solution);
+                let result = simulated_annealing(&problem, &solution);
+                solution = result.0;
                 let score = score(&problem, &solution.placements);
                 if score <= cur_score {
                     break;
@@ -100,7 +101,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     log::error!("failed to write solution: {:?}", e);
                     break;
                 }
-                log::info!("problem={problem_id}:\t{cur_score}\t->\t{score}");
+                let delta = (score - cur_score) / 1e6;
+                log::info!(
+                    "problem={problem_id}:\t{cur_score}\t->\t{score}\tdelta:{delta}*1e6\taccepted:{}",
+                    result.1
+                );
                 cur_score = score;
             }
         });
