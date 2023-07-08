@@ -26,6 +26,11 @@ namespace manarimo {
         vector<number> tastes;
     };
 
+    struct pillar_t {
+        P center;
+        number radius;
+    };
+
     struct problem_t {
         // 問題定義に書いてある情報
         number room_width;
@@ -36,6 +41,7 @@ namespace manarimo {
 
         vector<int> musicians;
         vector<atendee_t> attendees;
+        vector<pillar_t> pillars;
     };
 
     void from_json(const json& j, P2& p) {
@@ -50,6 +56,11 @@ namespace manarimo {
         a.pos = P(a.x, a.y);
     }
 
+    void from_json(const json& j, pillar_t& p) {
+        j.at("center").get_to(p.center);
+        j.at("radius").get_to(p.radius);
+    }
+
     void from_json(const json& j, problem_t& p) {
         j.at("room_width").get_to(p.room_width);
         j.at("room_height").get_to(p.room_height);
@@ -58,6 +69,7 @@ namespace manarimo {
         j.at("stage_bottom_left").get_to(p.stage_bottom_left);
         j.at("musicians").get_to(p.musicians);
         j.at("attendees").get_to(p.attendees);
+        j.at("pillars").get_to(p.pillars);
     }
 
     // problem_t が大きすぎて json::get<> で読むとスタックオーバーフローするので、出力先は引数で取る
