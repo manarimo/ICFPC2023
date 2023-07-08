@@ -53,14 +53,14 @@ namespace manarimo {
         return angle;
     }
 
-    bool is_pillar_effective(const atendee_t& attendee, const P stage_bottom_left, const number stage_width, const number stage_height, const pillar_t& pillar) {
+    bool is_pillar_effective(const atendee_t& attendee, const P& stage_bottom_left, const number stage_width, const number stage_height, const pillar_t& pillar) {
         // maybe a good idea to cache result
         vector<P> stage_corners;
         stage_corners.push_back(stage_bottom_left);
         stage_corners.push_back({stage_bottom_left.first, stage_bottom_left.second + stage_height});
         stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second});
         stage_corners.push_back({stage_bottom_left.first + stage_width, stage_bottom_left.second + stage_height});
-        
+
         for (auto corner : stage_corners) {
             if (dist_line(attendee.pos, corner, pillar.center) < pillar.radius * pillar.radius) {
                 return true;
@@ -79,7 +79,6 @@ namespace manarimo {
     vector<int> get_unblocked_musician_of_attendee(const problem_t& problem, const vector<P>& placements, const int attendee_id) {
         // only considers musician-pillar-attendee blocking.
         const int n_musician = problem.musicians.size();
-        const int n_attendee = problem.attendees.size();
         const int n_pillar = problem.pillars.size();
 
         vector<int> unblocked_musicians;
@@ -101,7 +100,7 @@ namespace manarimo {
 
         // add event type=0, 2
         int overlapping_spans = 0;
-        for (int i_pillar = 0; i_pillar < n_musician; i_pillar++) {
+        for (int i_pillar = 0; i_pillar < n_pillar; i_pillar++) {
             if (!is_pillar_effective(
                 problem.attendees[attendee_id], 
                 {problem.stage_bottom_left.first, problem.stage_bottom_left.second}, 
@@ -116,6 +115,9 @@ namespace manarimo {
             const cP location = {problem.pillars[i_pillar].center.first, problem.pillars[i_pillar].center.second};
             const cP vec = location - center;
             const number distance = abs(vec);
+            if (distance < pillar_radius) {
+                return {};
+            }
             const number vec_argument = arg(vec);
             const number offset = asin(pillar_radius / distance);
 
@@ -131,7 +133,7 @@ namespace manarimo {
         }
 
         sort(events.begin(), events.end());
-        for (const auto event: events) {
+        for (const auto& event: events) {
             const auto event_info = event_infos[event.second];
             switch (event_info.type) {
                 case 0:
@@ -201,14 +203,14 @@ namespace manarimo {
         }
 
         sort(events.begin(), events.end());
-        for (const auto event: events) {
+        for (const auto& event: events) {
             const auto event_info = event_infos[event.second];
             switch (event_info.type) {
                 case 0:
                     overlapping_spans -= 1;
                     break;
                 case 1:
-                    if (overlapping_spans == 0) {
+                    if (overlapping_spans <= 0) {
                         unblocked_attendees.push_back(event_info.index);
                     }
                     break;
