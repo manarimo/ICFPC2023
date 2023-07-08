@@ -61,6 +61,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         let score = score(problem, &solution.placements);
+        if score < 0.0 {
+            continue;
+        }
         let best_score = best_solutions
             .entry(problem_id)
             .or_insert((score, solution.clone()));
@@ -69,7 +72,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let out = &args[3];
     let mut rows = vec![];
     for (problem_id, (_, solution)) in best_solutions {
         match problems.remove(&problem_id) {
@@ -80,6 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    let out = &args[3];
     rows.into_par_iter()
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);

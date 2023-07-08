@@ -66,55 +66,37 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> (Solution,
             );
         }
 
-        if rng.gen_bool(0.2) {
+        let m = if rng.gen_bool(0.2) {
             let i = rng.gen_range(0..state.placements.len());
             let j = rng.gen_range(0..state.placements.len());
-            state.placements.swap(i, j);
-            if !state.is_valid(problem) {
-                state.placements.swap(i, j);
-                continue;
-            }
-
-            let new_score = score::score(&problem, &state.placements);
-            let temp = start_temp
-                + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / time_limit;
-            let prob = ((new_score - state.score) / temp).exp();
-
-            total_trial += 1.0;
-            if prob > rng.gen_range(0.0..1.0) {
-                accepted += 1.0;
-                state.score = new_score;
-                if new_score > best.score {
-                    best = state.clone();
-                }
-            } else {
-                state.placements.swap(i, j);
-            }
+            Move::Swap { i, j }
         } else {
             let i = rng.gen_range(0..state.placements.len());
             let d = rng.gen_range(-1.0..1.0);
             let to_x = rng.gen_bool(0.5);
-            state.move_forward(i, to_x, d);
-            if !state.is_valid(problem) {
-                state.move_back(i, to_x, d);
-                continue;
-            }
+            Move::Shift { i, to_x, d }
+        };
 
-            let new_score = score::score(&problem, &state.placements);
-            let temp = start_temp
-                + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / time_limit;
-            let prob = ((new_score - state.score) / temp).exp();
+        state.move_forward(m);
+        if !state.is_valid(problem) {
+            state.move_backward(m);
+            continue;
+        }
 
-            total_trial += 1.0;
-            if prob > rng.gen_range(0.0..1.0) {
-                accepted += 1.0;
-                state.score = new_score;
-                if new_score > best.score {
-                    best = state.clone();
-                }
-            } else {
-                state.move_back(i, to_x, d);
+        let new_score = score::score(&problem, &state.placements);
+        let temp =
+            start_temp + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / time_limit;
+        let prob = ((new_score - state.score) / temp).exp();
+
+        total_trial += 1.0;
+        if prob > rng.gen_range(0.0..1.0) {
+            accepted += 1.0;
+            state.score = new_score;
+            if new_score > best.score {
+                best = state.clone();
             }
+        } else {
+            state.move_backward(m);
         }
     }
     (
@@ -132,22 +114,42 @@ struct State {
 }
 
 impl State {
-    fn move_forward(&mut self, i: usize, to_x: bool, d: f64) {
-        if to_x {
-            self.placements[i].x -= d;
-        } else {
-            self.placements[i].y -= d;
+    fn move_forward(&mut self, m: Move) {
+        match m {
+            Move::Shift { i, to_x, d } => {
+                if to_x {
+                    self.placements[i].x -= d;
+                } else {
+                    self.placements[i].y -= d;
+                }
+            }
+            Move::Swap { i, j } => {
+                self.placements.swap(i, j);
+            }
         }
     }
-    fn move_back(&mut self, i: usize, to_x: bool, d: f64) {
-        if to_x {
-            self.placements[i].x += d;
-        } else {
-            self.placements[i].y += d;
+    fn move_backward(&mut self, m: Move) {
+        match m {
+            Move::Shift { i, to_x, d } => {
+                if to_x {
+                    self.placements[i].x += d;
+                } else {
+                    self.placements[i].y += d;
+                }
+            }
+            Move::Swap { i, j } => {
+                self.placements.swap(i, j);
+            }
         }
     }
 
     fn is_valid(&self, problem: &Problem) -> bool {
         is_valid(problem, &self.placements)
     }
+}
+
+#[derive(Clone, Copy)]
+enum Move {
+    Shift { i: usize, to_x: bool, d: f64 },
+    Swap { i: usize, j: usize },
 }
