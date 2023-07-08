@@ -8,6 +8,7 @@
     #define M_PI 3.14159265358979323846
 #endif
 #include "../library/scoring.h"
+#include "../library/solution.h"
 
 using namespace std;
 
@@ -168,15 +169,7 @@ void input() {
 }
 
 void output(const vector<geo::P>& placements) {
-    printf("{\n");
-    printf("  \"placements\": [\n");
-    for (int i = 0; i < placements.size(); i++) {
-        printf("    {\"x\": %lf, \"y\": %lf}", placements[i].X, placements[i].Y);
-        if (i + 1 < placements.size()) printf(",");
-        printf("\n");
-    }
-    printf("  ]\n");
-    printf("}\n");
+    manarimo::print_solution(std::cout, manarimo::solution_t(placements));
 }
 
 double dist2(const geo::P& p1, const geo::P& p2) {
