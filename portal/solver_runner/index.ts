@@ -33,6 +33,12 @@ async function downloadSolver(path: string): Promise<string> {
     return fsPath;
 }
 
+async function downloadScorer(): Promise<string> {
+    const fsPath = `/tmp/scorer`;
+    await s3Util.downloadS3Object(`solver/scorer`, fsPath);
+    return fsPath;
+}
+
 async function downloadProblem(problemId: number): Promise<string> {
     const fsPath = `/tmp/problem-${problemId}.json`;
     await s3Util.downloadS3Object(`problems/${problemId}.json`, fsPath);
@@ -43,10 +49,11 @@ export async function handler(
   event: SolverRunnerEvent,
   context: Context,
 ): Promise<void> {
-    // Download solver and problem
-    const [solverPath, problemPath] = await Promise.all([
+    // Download solver, scorer and problem
+    const [solverPath, scorerPath, problemPath] = await Promise.all([
         downloadSolver(event.solverPath),
-        downloadProblem(event.problemId)
+        downloadScorer(),
+        downloadProblem(event.problemId),
     ]);
 
     // Run solver
@@ -56,7 +63,7 @@ export async function handler(
     await writeFile(solutionPath, solution);
 
     // Run scorer
-    const scorer = new Spawner('/opt/scorer', [problemPath, solutionPath]);
+    const scorer = new Spawner(scorerPath, [problemPath, solutionPath]);
     const score = parseInt(await scorer.run());
     console.log(`Score: ${score}`);
 
