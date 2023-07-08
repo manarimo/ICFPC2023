@@ -133,7 +133,7 @@ void simulated_annealing::print() const {
 }
 
 const double INIT_TIME_LIMIT = 10;
-const double MAIN_TIME_LIMIT = 100;
+const double MAIN_TIME_LIMIT = 400;
 const int MAX_MUSICIAN = 1000;
 const int MAX_ATTENDEE = 700;
 const double RADIUS = 10;
