@@ -1,10 +1,10 @@
-import Canvas from "@/components/visualizer";
-import useProblem from "./hooks/useProblem";
-import useSolution from "./hooks/useSolution";
+import Svg from "@/components/svg";
+import useProblem from "@/containers/visualizer/hooks/useProblem";
+import useSolution from "@/containers/visualizer/hooks/useSolution";
 import { useCallback, useState } from "react";
 
 type Props = {};
-const Visualizer = ({}: Props) => {
+const SvgContainer = ({}: Props) => {
   const [selected, setSelected] = useState(1);
   const [solver, setSolver] = useState<string>();
   const setProblemId = useCallback((problemId: number) => {
@@ -15,9 +15,9 @@ const Visualizer = ({}: Props) => {
   const solution = useSolution(solver, selected);
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", minWidth: "1200px" }}>
       {problem.data && (
-        <Canvas problem={problem.data} solution={solution.data} />
+        <Svg problem={problem.data} solution={solution.data ?? null} />
       )}
       <div style={{ width: "100px" }}>
         <select
@@ -48,7 +48,7 @@ const Visualizer = ({}: Props) => {
     </div>
   );
 };
-export default Visualizer;
+export default SvgContainer;
 
 const SOLVERS = [
   {

@@ -1,9 +1,9 @@
-import Visualizer from "@/containers/visualizer";
+import SvgContainer from "@/containers/svg";
 
 export default function Home() {
   return (
     <>
-      <Visualizer />
+      <SvgContainer />
     </>
   );
 }
