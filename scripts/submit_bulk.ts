@@ -35,9 +35,9 @@ const solutionsDir = Deno.args[0];
 const imagesDir = `${solutionsDir}/images`;
 await ensureDirectory(imagesDir);
 
-const apiKey = Deno.env.get("API_KEY");
+const apiKey = Deno.env.get("ICFPC_TOKEN");
 if (!apiKey) {
-  throw new Error("API_KEY is not set");
+  throw new Error("ICFPC_TOKEN is not set");
 }
 
 for await (const dirEntry of Deno.readDir(solutionsDir)) {
