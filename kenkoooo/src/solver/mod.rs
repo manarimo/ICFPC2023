@@ -39,7 +39,10 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
     let score = score::score(&problem, &placements);
 
     const TIME_LIMIT: f64 = 60.0;
-    const START_TEMP: f64 = 1e4;
+    let start_temp = std::env::var("START_TEMP")
+        .ok()
+        .and_then(|s| s.parse::<f64>().ok())
+        .unwrap_or(1e4);
     const END_TEMP: f64 = 1.0;
 
     let mut rng = StdRng::seed_from_u64(42);
@@ -70,7 +73,7 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> Solution {
 
         let new_score = score::score(&problem, &state.placements);
         let temp =
-            START_TEMP + (END_TEMP - START_TEMP) * start_time.elapsed().as_secs_f64() / TIME_LIMIT;
+            start_temp + (END_TEMP - start_temp) * start_time.elapsed().as_secs_f64() / TIME_LIMIT;
         let prob = ((new_score - state.score) / temp).exp();
 
         total_trial += 1.0;

@@ -69,6 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    let out = &args[3];
     let mut rows = vec![];
     for (problem_id, (_, solution)) in best_solutions {
         match problems.remove(&problem_id) {
@@ -88,9 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if score <= cur_score {
                     break;
                 }
-                let file = match std::fs::File::create(format!(
-                    "../solutions/kenkoooo-sa-improve/{problem_id}.json"
-                )) {
+                let file = match std::fs::File::create(format!("{out}/{problem_id}.json")) {
                     Ok(file) => file,
                     Err(e) => {
                         log::error!("failed to open solution: {:?}", e);
