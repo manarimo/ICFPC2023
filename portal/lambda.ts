@@ -5,6 +5,7 @@ import {
 } from "aws-lambda";
 import { submitSolutionHandler } from "./submit_solution";
 import { Pool } from "pg";
+import { handler as buildHandler } from "./builder/build_solver";
 
 const dbHost = process.env["POSTGRES_HOST"]!;
 const password = process.env["POSTGRES_PASSWORD"]!;
@@ -28,6 +29,8 @@ export async function handler(
   let result: any;
   if (event.path == "/solutions/submit") {
     result = await submitSolutionHandler(event, context, pg);
+  } else if (event.path == "/build") {
+    result = await buildHandler(event, context);
   } else {
     result = await apiHandler(event);
   }
