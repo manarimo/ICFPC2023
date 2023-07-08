@@ -179,13 +179,11 @@ void input() {
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
-    max_diff_width = 0.5;
     
     stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
-    max_diff_height = 0.5;
 }
 
 void output(const vector<geo::P>& placements) {
@@ -403,6 +401,9 @@ string get_prob_name(string s) {
 int main(int argc, char *argv[]) {
     input();
 
+    max_diff_width = 10.0;
+    max_diff_height = 10.0;
+
     string file_name = "unknown";
 
     double best_score;
@@ -425,7 +426,10 @@ int main(int argc, char *argv[]) {
 
     double init_best = best_score;
 
+    vector<double> max_diff = {1, 10, 50, 100};
     for (int times = 0; times < 1000; ++times) {
+        max_diff_width = max_diff_height = max_diff[times % max_diff.size()];
+        fprintf(stderr, "max diff width: %lf, max diff height: %lf \n", max_diff_width, max_diff_height);
         double current_score = best_score;
         
         int unchanged = 0;
