@@ -79,23 +79,21 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
+    constexpr static double START_TEMP = 10000;
     constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
-    double start_temp;
     double log_probability[LOG_SIZE + 1];
     long long iteration = 0;
     long long accepted = 0;
     long long rejected = 0;
     double time = 0;
-    double temp;
+    double temp = START_TEMP;
     timer sa_timer;
 };
 
 simulated_annealing::simulated_annealing(double time_limit) : time_limit(time_limit) {
-    start_temp = pow(10, random::get_double(3, 5));
-    temp = start_temp;
-    temp_ratio = (END_TEMP - start_temp) / time_limit;
+    temp_ratio = (END_TEMP - START_TEMP) / time_limit;
     sa_timer.start();
     for (int i = 0; i <= LOG_SIZE; i++) log_probability[i] = log(random::probability());
 }
@@ -104,7 +102,7 @@ inline bool simulated_annealing::end() {
     iteration++;
     if ((iteration & UPDATE_INTERVAL) == 0) {
         time = sa_timer.get_time();
-        temp = start_temp + temp_ratio * time;
+        temp = START_TEMP + temp_ratio * time;
         return time >= time_limit;
     } else {
         return false;
@@ -352,21 +350,16 @@ void sa_no_block() {
 int main(int argc, char *argv[]) {
     input();
     
-    double best_score;
     if (argc < 2) {
         sa_no_block();
         placements = best_placements;
-        best_score = score_all();
     } else {
         manarimo::solution_t intermediate_solution;
         manarimo::load_solution(string(argv[1]), intermediate_solution);
-        for (auto p : intermediate_solution.placements) {
-            best_placements.push_back(make_pair(p.x, p.y));
-        }
+        best_placements = intermediate_solution.as_p();
         placements = best_placements;
-        best_score = score_all();
-        fprintf(stderr, "score at load : %lf\n", best_score);
     }
+    double best_score = score_all();
     double current_score = best_score;
     
     int unchanged = 0;
