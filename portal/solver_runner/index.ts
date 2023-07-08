@@ -8,6 +8,7 @@ interface SolverRunnerEvent {
     problemId: number;
     solverPath: string;
     solverName: string;
+    seed?: string;
 }
 
 const dbHost = process.env['POSTGRES_HOST']!;
@@ -45,19 +46,50 @@ async function downloadProblem(problemId: number): Promise<string> {
     return fsPath;
 }
 
+async function downloadSeed(problemId: number, seed?: string): Promise<string | null> {
+    if (seed == undefined) {
+        return null;
+    }
+
+    const fsPath = `/tmp/seed-${problemId}.json`;
+    let seedToUse = seed;
+    if (seed == '__best__') {
+        const bestSeed = await determineBestSeed(problemId);
+        if (bestSeed == null) {
+            return null;
+        }
+        seedToUse = bestSeed;
+    }
+    await s3Util.downloadS3Object(`solutions/${seedToUse}/${problemId}.json`, fsPath);
+    return fsPath;
+}
+
+async function determineBestSeed(problemId: number): Promise<string | null> {
+    const response = await pg.query('SELECT solver_name FROM solutions WHERE problem_id = $1 ORDER BY score DESC LIMIT 1', [problemId]);
+    if (response.rowCount == 0) {
+        return null;
+    }
+    return response.rows[0]['solver_name'];
+}
+
 export async function handler(
   event: SolverRunnerEvent,
   context: Context,
 ): Promise<void> {
     // Download solver, scorer and problem
-    const [solverPath, scorerPath, problemPath] = await Promise.all([
+    const [solverPath, scorerPath, problemPath, seedPath] = await Promise.all([
         downloadSolver(event.solverPath),
         downloadScorer(),
         downloadProblem(event.problemId),
+        downloadSeed(event.problemId, event.seed),
     ]);
 
     // Run solver
-    const solver = new Spawner(solverPath);
+    let solverArgs: string[] = [];
+    if (seedPath != null) {
+        solverArgs.push(seedPath);
+    }
+    const solver = new Spawner(solverPath, solverArgs);
     const solution = await solver.run(problemPath);
     const solutionPath = '/tmp/solution.json';
     await writeFile(solutionPath, solution);
