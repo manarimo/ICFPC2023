@@ -1,4 +1,4 @@
-use kenkoooo::{load_best, score, simulated_annealing};
+use kenkoooo::{load_best, score, simulated_annealing2};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);
             loop {
-                let result = simulated_annealing(&problem, &solution);
+                let result = simulated_annealing2(&problem, &solution);
                 solution = result.0;
                 let score = score(&problem, &solution.placements);
                 if score <= cur_score {
