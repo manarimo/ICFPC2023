@@ -156,13 +156,13 @@ void input() {
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
-    max_diff_width = (stage_right - stage_left) / 10;
+    max_diff_width = 1;
     
     stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
-    max_diff_height = (stage_top - stage_bottom) / 10;
+    max_diff_height = 1;
 }
 
 void output(const vector<geo::P>& placements) {
