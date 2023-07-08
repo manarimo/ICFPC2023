@@ -61,7 +61,7 @@ namespace manarimo {
         const cP center = {placements[musician_id].first, placements[musician_id].second};
 
         struct event {
-            int type;  // 0: block start, 1: attendee, 2: block end
+            int type;  // 0: block end, 1: attendee, 2: block start
             int index;  // musician id or attendee id
         };
         vector<event> event_infos;
@@ -95,9 +95,9 @@ namespace manarimo {
                 overlapping_spans += 1;
             }
             events.emplace_back(start, event_infos.size());
-            event_infos.push_back({0, j_musician});
-            events.emplace_back(end, event_infos.size());
             event_infos.push_back({2, j_musician});
+            events.emplace_back(end, event_infos.size());
+            event_infos.push_back({0, j_musician});
         }
 
         sort(events.begin(), events.end());
@@ -105,7 +105,7 @@ namespace manarimo {
             const auto event_info = event_infos[event.second];
             switch (event_info.type) {
                 case 0:
-                    overlapping_spans += 1;
+                    overlapping_spans -= 1;
                     break;
                 case 1:
                     if (overlapping_spans == 0) {
@@ -113,7 +113,7 @@ namespace manarimo {
                     }
                     break;
                 case 2:
-                    overlapping_spans -= 1;
+                    overlapping_spans += 1;
                     break;
                 default:
                     throw -1;
