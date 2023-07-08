@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useMemo } from "react";
 
 type ProblemProps = {
   problemId: number;
@@ -18,6 +19,15 @@ type Props = {
 };
 
 const Home = ({ problems }: Props) => {
+  const pointSum = useMemo(() => {
+    let sum = 0;
+    problems.forEach((problem) => {
+      if (problem.bestSolution) {
+        sum += problem.bestSolution.score;
+      }
+    });
+    return sum;
+  }, [problems]);
   return (
     <table>
       <thead>
@@ -89,6 +99,13 @@ const Home = ({ problems }: Props) => {
                     .toString()
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ",") ?? ""}
                 </li>
+                {problem.bestSolution ? (
+                  <li>{`${
+                    Math.floor(
+                      (problem.bestSolution.score / pointSum) * 1000000
+                    ) / 10000
+                  }%`}</li>
+                ) : null}
               </ul>
             </td>
           </tr>

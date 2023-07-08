@@ -1,11 +1,11 @@
-import { SpawnOptions, SpawnOptionsWithStdioTuple, spawn } from "child_process";
+import { SpawnOptionsWithoutStdio, spawn } from "child_process";
 import { createReadStream } from "fs";
 
 export class Spawner {
-    constructor(readonly executable: string, readonly args?: string[]) {}
+    constructor(readonly executable: string, readonly args?: string[], readonly opts?: SpawnOptionsWithoutStdio) {}
 
     run(stdinFile?: string): Promise<string> {
-        const proc = spawn(this.executable, this.args, { shell: true });
+        const proc = spawn(this.executable, this.args, this.opts);
         if (stdinFile) {
             const stream = createReadStream(stdinFile);
             stream.pipe(proc.stdin);

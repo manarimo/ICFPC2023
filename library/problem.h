@@ -74,6 +74,8 @@ namespace manarimo {
         j.at("pillars").get_to(p.pillars);
         if (j.count("playing_together")) {
             j.at("playing_together").get_to(p.playing_together);
+        } else {
+            p.playing_together = false;
         }
     }
 

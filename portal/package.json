@@ -9,7 +9,11 @@
     "postbuild": "cd dist && zip -r index.zip index.js*",
     "prebuild_runner": "rm -rf dist",
     "build_runner": "esbuild solver_runner/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
-    "postbuild_runner": "cd dist && zip -r index_runner.zip index.js*"
+    "postbuild_runner": "cd dist && zip -r index_runner.zip index.js*",
+    "prebuild_builder": "rm -rf dist",
+    "build_builder": "esbuild builder/build_solver.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild_builder": "cd dist && zip -r index_builder.zip index.js*"
+
   },
   "author": "",
   "license": "ISC",
