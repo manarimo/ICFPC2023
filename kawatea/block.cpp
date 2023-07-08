@@ -76,7 +76,7 @@ class random {
 
 class simulated_annealing {
     public:
-    simulated_annealing();
+    simulated_annealing(double time_limit);
     inline bool end();
     inline bool accept(double current_score, double next_score);
     void print() const;
@@ -85,10 +85,10 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double TIME_LIMIT = 10;
     constexpr static double START_TEMP = 10000;
     constexpr static double END_TEMP = 1e-9;
-    constexpr static double TEMP_RATIO = (END_TEMP - START_TEMP) / TIME_LIMIT;
+    double time_limit;
+    double temp_ratio;
     double log_probability[LOG_SIZE + 1];
     long long iteration = 0;
     long long accepted = 0;
@@ -98,7 +98,8 @@ class simulated_annealing {
     timer sa_timer;
 };
 
-simulated_annealing::simulated_annealing() {
+simulated_annealing::simulated_annealing(double time_limit) : time_limit(time_limit) {
+    temp_ratio = (END_TEMP - START_TEMP) / time_limit;
     sa_timer.start();
     for (int i = 0; i <= LOG_SIZE; i++) log_probability[i] = log(random::probability());
 }
@@ -107,8 +108,8 @@ inline bool simulated_annealing::end() {
     iteration++;
     if ((iteration & UPDATE_INTERVAL) == 0) {
         time = sa_timer.get_time();
-        temp = START_TEMP + TEMP_RATIO * time;
-        return time >= TIME_LIMIT;
+        temp = START_TEMP + temp_ratio * time;
+        return time >= time_limit;
     } else {
         return false;
     }
@@ -131,6 +132,8 @@ void simulated_annealing::print() const {
     fprintf(stderr, "rejected: %lld\n", rejected);
 }
 
+const double INIT_TIME_LIMIT = 10;
+const double MAIN_TIME_LIMIT = 100;
 const int MAX_MUSICIAN = 1500;
 const int MAX_ATTENDEE = 5000;
 const double RADIUS = 10;
@@ -253,6 +256,20 @@ double score_all() {
     return sum;
 }
 
+double score_one_no_block(const geo::P& p, int musician) {
+    double sum = 0;
+    for (const manarimo::atendee_t& a : problem.attendees) {
+        sum += calc_one_score(p, a.pos, a.tastes[musician]);
+    }
+    return sum;
+}
+
+double score_all_no_block() {
+    double sum = 0;
+    for (int i = 0; i < problem.musicians.size(); i++) sum += score_one_no_block(placements[i], problem.musicians[i]);
+    return sum;
+}
+
 void save_best_state() {
     best_placements = placements;
 }
@@ -262,24 +279,91 @@ void load_best_state() {
     calc_blocked();
 }
 
-int main() {
-    input();
-    
+void sa_no_block() {
     double best_score = -1e18;
     for (int i = 0; i < 10; i++) {
         random_init();
-        double score = score_all();
+        double score = score_all_no_block();
         if (score > best_score) {
             best_score = score;
             best_placements = placements;
         }
     }
     placements = best_placements;
-    double current_score = score_all();
+    double current_score = best_score;
+    
+    int unchanged = 0;
+    simulated_annealing sa(INIT_TIME_LIMIT);
+    while (!sa.end()) {
+        unchanged++;
+        if (unchanged == 10000) {
+            current_score = best_score;
+            placements = best_placements;
+            unchanged = 0;
+        }
+        
+        if (random::get(100) < 80) {
+            int m = random::get(problem.musicians.size());
+            geo::P& current_p = placements[m];
+            double dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
+            double dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);
+            geo::P next_p = current_p;
+            next_p.X += dx;
+            next_p.Y += dy;
+            bool ng = false;
+            for (int i = 0; i < placements.size(); i++) {
+                if (i == m) continue;
+                if (dist2(placements[i], next_p) < RADIUS2) {
+                    ng = true;
+                    break;
+                }
+            }
+            if (ng) continue;
+            double next_score = current_score;
+            next_score -= score_one_no_block(current_p, problem.musicians[m]);
+            next_score += score_one_no_block(next_p, problem.musicians[m]);
+            if (sa.accept(current_score, next_score)) {
+                current_score = next_score;
+                placements[m] = next_p;
+                if (current_score > best_score) {
+                    best_score = current_score;
+                    best_placements = placements;
+                    unchanged = 0;
+                }
+            }
+        } else {
+            int m1 = random::get(problem.musicians.size());
+            int m2 = random::get(problem.musicians.size() - 1);
+            if (m2 >= m1) m2++;
+            double next_score = current_score;
+            next_score -= score_one_no_block(placements[m1], problem.musicians[m1]);
+            next_score -= score_one_no_block(placements[m2], problem.musicians[m2]);
+            next_score += score_one_no_block(placements[m1], problem.musicians[m2]);
+            next_score += score_one_no_block(placements[m2], problem.musicians[m1]);
+            if (sa.accept(current_score, next_score)) {
+                current_score = next_score;
+                swap(placements[m1], placements[m2]);
+                if (current_score > best_score) {
+                    best_score = current_score;
+                    best_placements = placements;
+                    unchanged = 0;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    input();
+    
+    sa_no_block();
+    placements = best_placements;
+    double best_score = score_all();
+    double current_score = best_score;
     
     int unchanged = 0;
     vector<pair<int, int>> new_blocked;
-    simulated_annealing sa;
+    simulated_annealing sa(MAIN_TIME_LIMIT);
     while (!sa.end()) {
         unchanged++;
         if (unchanged == 10000) {
@@ -291,8 +375,8 @@ int main() {
         if (random::get(100) < 80) {
             int m = random::get(problem.musicians.size());
             geo::P& current_p = placements[m];
-            double dx = random::get_double(max(-max_diff_width, stage_left - current_p.X), min(max_diff_width, stage_right - current_p.X));
-            double dy = random::get_double(max(-max_diff_height, stage_bottom - current_p.Y), min(max_diff_height, stage_top - current_p.Y));
+            double dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
+            double dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);
             geo::P next_p = current_p;
             next_p.X += dx;
             next_p.Y += dy;

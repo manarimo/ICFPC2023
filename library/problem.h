@@ -21,7 +21,8 @@ namespace manarimo {
     struct atendee_t {
         number x;
         number y;
-        P get_pos() { return P(x, y); }
+        P pos;
+        P get_pos() { return pos; }
         vector<number> tastes;
     };
 
@@ -46,6 +47,7 @@ namespace manarimo {
         j.at("x").get_to(a.x);
         j.at("y").get_to(a.y);
         j.at("tastes").get_to(a.tastes);
+        a.pos = P(a.x, a.y);
     }
 
     void from_json(const json& j, problem_t& p) {
