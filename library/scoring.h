@@ -2,6 +2,7 @@
 #define ICFPC2023_SCORING_H
 
 #include "problem.h"
+#include "solution.h"
 #include <vector>
 #include <set>
 #include <algorithm>
