@@ -15,7 +15,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (new_solution, score) = states
             .into_par_iter()
             .map(|solution| {
-                let (solution, accepted) = simulated_annealing(&problem, &solution);
+                let start_temp = std::env::var("START_TEMP")
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(1e4);
+                let time_limit = std::env::var("TIME_LIMIT")
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(60.0);
+                let (solution, accepted) =
+                    simulated_annealing(&problem, &solution, start_temp, time_limit);
                 let score = score(&problem, &solution.placements);
                 let delta = (score - cur_score) / 1e6;
                 log::info!("{cur_score}\t->\t{score}\tdelta:{delta}*1e6\taccepted:{accepted}");

@@ -10,20 +10,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     rows.into_par_iter()
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);
+            let mut start_temp = std::env::var("START_TEMP")
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(1e6);
+            let time_limit = std::env::var("TIME_LIMIT")
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(60.0);
+            let mut trial = 0;
+
             loop {
-                let start_temp = std::env::var("START_TEMP")
-                    .ok()
-                    .and_then(|s| s.parse::<f64>().ok())
-                    .unwrap_or(1e4);
-                let time_limit = std::env::var("TIME_LIMIT")
-                    .ok()
-                    .and_then(|s| s.parse::<f64>().ok())
-                    .unwrap_or(60.0);
                 let result = simulated_annealing(&problem, &solution, start_temp, time_limit);
                 solution = result.0;
+                let accepted = result.1;
                 let score = score(&problem, &solution.placements);
                 if score <= cur_score {
-                    break;
+                    trial += 1;
+                    if accepted > 0.3 {
+                        start_temp /= 2.0;
+                    } else {
+                        start_temp *= 2.0;
+                    }
+
+                    if trial > 4 {
+                        break;
+                    }
+                } else {
+                    trial = 0;
                 }
                 let file = match std::fs::File::create(format!("{out}/{problem_id}.json")) {
                     Ok(file) => file,
@@ -37,10 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     break;
                 }
                 let delta = (score - cur_score) / 1e6;
-                log::info!(
-                    "problem={problem_id}:\t{cur_score}\t->\t{score}\tdelta:{delta}*1e6\taccepted:{}",
-                    result.1
-                );
+                log::info!("problem={problem_id}:\t{cur_score}\t->\t{score}\tdelta:{delta}*1e6");
                 cur_score = score;
             }
         });
