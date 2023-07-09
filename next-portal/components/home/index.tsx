@@ -36,6 +36,7 @@ const Home = ({ problems }: Props) => {
           <th>Info</th>
           <th>Image</th>
           <th>Best Solution</th>
+          <th>Best Solution Image</th>
         </tr>
       </thead>
       <tbody>
@@ -107,6 +108,21 @@ const Home = ({ problems }: Props) => {
                   }%`}</li>
                 ) : null}
               </ul>
+            </td>
+            <td
+              style={{
+                border: "1px solid black",
+                padding: "5px",
+              }}
+            >
+              {problem.bestSolution? (
+                <Image
+                  width={400}
+                  height={200}
+                  src={`/solutions/${problem.bestSolution.name}/images/${problem.problemId}.svg`}
+                  alt=""
+                />
+              ) : null}
             </td>
           </tr>
         ))}
