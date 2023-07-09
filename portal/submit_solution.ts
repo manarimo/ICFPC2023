@@ -66,7 +66,7 @@ export async function submitSolutionHandler(
 
     // Upload solution to S3
     const key = `solutions/${solverName}/${problemId}.json`;
-    s3Util.uploadS3Object(key, content);
+    await s3Util.uploadS3Object(key, content);
     console.log(`Stored file as ${key}`);
 
     // Update solution database

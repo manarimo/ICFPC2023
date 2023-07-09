@@ -26,7 +26,7 @@ async function downloadAndSubmit(problemId: number, solutionS3Path: string): Pro
     await s3Util.downloadS3Object(solutionS3Path, tmpPath);
     const solution = await readFile(tmpPath);
 
-    await fetch('https://api.icfpcontest.com/submission', {
+    const response = await fetch('https://api.icfpcontest.com/submission', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -34,9 +34,13 @@ async function downloadAndSubmit(problemId: number, solutionS3Path: string): Pro
         },
         body: JSON.stringify({
             problem_id: problemId,
-            contents: solution
+            contents: solution.toString()
         })
     });
+    if (Math.floor(response.status / 100) != 2) {
+        const error = await response.text();
+        throw new Error(`Failed to submit ${problemId}: ${error}`);
+    }
     console.log(`Submitted ${problemId}`);
     await rm(tmpPath);
 }
@@ -56,9 +60,15 @@ export async function handler(
         where r=1;`
     );
 
-    for (const row of solutions.rows) {
-        console.log(`Processing problem ${row['problem_id']} (max = ${row['score']} by ${row['solver_name']})`);
-        await downloadAndSubmit(row['problem_id'], row['solution_path']);
+    try {
+        for (const row of solutions.rows) {
+            console.log(`Processing problem ${row['problem_id']} (max = ${row['score']} by ${row['solver_name']})`);
+            await downloadAndSubmit(row['problem_id'], row['solution_path']);
+        }
+    } catch (e) {
+        console.error(e);
+        await discordSay('提出失敗したじゃも……');
+        return;
     }
 
     await discordSay('一番いいヤツ！提出しといたよ！');
