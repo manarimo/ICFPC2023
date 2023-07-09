@@ -5,9 +5,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     let args: Vec<String> = std::env::args().collect();
 
-    let rows = load_best(&args[1], &args[2])?;
+    let bests = load_best(&args[1], &args[2])?;
+    let bests = bests
+        .into_iter()
+        .filter(|(_, _, problem)| !problem.playing_together.unwrap_or(false))
+        .collect::<Vec<_>>();
     let out = &args[3];
-    rows.into_par_iter()
+    bests.into_par_iter()
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);
             loop {
