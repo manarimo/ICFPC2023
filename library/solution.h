@@ -20,7 +20,9 @@ namespace manarimo {
 
     struct solution_t {
         vector<P3> placements;
-        vector<P> as_p() {
+        vector<number> volumes;
+
+        vector<P> as_p() const {
             vector<P> ret;
             for (P3 p : placements) {
                 ret.push_back(P(p.x, p.y));
@@ -28,7 +30,8 @@ namespace manarimo {
             return ret;
         }
         solution_t() {}
-        solution_t(const vector<P>& placements) {
+        solution_t(const vector<P>& placements): solution_t(placements, vector<number>(placements.size(), 1.)) {}
+        solution_t(const vector<P>& placements, const vector<number>& volumes): volumes(volumes) {
             for (auto p : placements) {
                 P3 p3;
                 p3.x = p.first;
@@ -49,10 +52,16 @@ namespace manarimo {
 
     void from_json(const json& j, solution_t& s) {
         j.at("placements").get_to(s.placements);
+        if (j.count("volumes")) {
+            j.at("volumes").get_to(s.volumes);
+        } else {
+            s.volumes = vector<number>(s.placements.size(), 1.);
+        }
     }
 
     void to_json(json& j, const solution_t& s) {
         j["placements"] = s.placements;
+        j["volumes"] = s.volumes;
     }
 
     // problem_t が大きすぎて json::get<> で読むとスタックオーバーフローするので、出力先は引数で取る

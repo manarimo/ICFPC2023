@@ -18,14 +18,13 @@ int main(int argc, char *argv[]) {
     manarimo::solution_t sol;
     manarimo::load_solution(argv[2], sol);
 
-    vector<geo::P> placements = sol.as_p();
     if (argc < 4 || string(argv[3]) != "--skip-validate") {
-        if (!manarimo::validate(prob, placements)) {
+        if (!manarimo::validate(prob, sol.as_p())) {
             cerr << "invalid solution" << endl;
             cout << 0 << endl;
             return 0;
         }
     }
-    cout << manarimo::score(prob, placements) << endl;
+    cout << manarimo::score(prob, sol) << endl;
     return 0;
 }

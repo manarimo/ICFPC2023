@@ -263,7 +263,8 @@ namespace manarimo {
         return unblocked_pairs;
     }
 
-    long long score(const problem_t& problem, const vector<P>& placements) {
+    long long score(const problem_t& problem, const solution_t& solution) {
+        const auto& placements = solution.as_p();
         map<int, vector<int>> instrument_groups;
         for (int musician_id = 0; musician_id < (int) problem.musicians.size(); musician_id++) {
             instrument_groups[problem.musicians[musician_id]].push_back(musician_id);
@@ -289,7 +290,7 @@ namespace manarimo {
             const int i_musician = unblocked_pair.first;
             const int i_attendee = unblocked_pair.second;
             const P attendee_location = {problem.attendees[i_attendee].x, problem.attendees[i_attendee].y};
-            score += ceil(closeness[i_musician] * ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician])));
+            score += ceil(solution.volumes[i_musician] * closeness[i_musician] * ceil(1000000 * problem.attendees[i_attendee].tastes[problem.musicians[i_musician]] / d(attendee_location, placements[i_musician])));
         }
         return score;
     }
