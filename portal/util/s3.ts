@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, S3 } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, PutObjectCommandInput, S3 } from "@aws-sdk/client-s3";
 import { createReadStream } from "fs";
 import { writeFile } from "fs/promises";
 
@@ -31,13 +31,18 @@ export class S3Util {
         await this._s3.send(command);
     }
 
-    async uploadS3ObjectFromFile(s3Path: string, file: string): Promise<void> {
+    async uploadS3ObjectFromFile(s3Path: string, file: string, contentType?: string): Promise<void> {
         const buf = createReadStream(file);
-        const command = new PutObjectCommand({
+        const input: PutObjectCommandInput = {
             Bucket: "icfpc2023-manarimo-3mrzsd",
             Key: s3Path,
-            Body: buf
-        });
+            Body: buf,
+        };
+        if (contentType != undefined) {
+            input.ContentType = contentType;
+        }
+
+        const command = new PutObjectCommand(input);
         await this._s3.send(command);
         buf.close();
     }

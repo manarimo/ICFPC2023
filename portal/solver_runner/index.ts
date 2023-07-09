@@ -112,7 +112,7 @@ export async function handler(
 
     // Save solution image
     const solutionImageS3Path = `solutions/${event.solverName}/images/${event.problemId}.svg`;
-    await s3Util.uploadS3ObjectFromFile(solutionImageS3Path, solutionImagePath);
+    await s3Util.uploadS3ObjectFromFile(solutionImageS3Path, solutionImagePath, 'image/svg+xml');
 
     // Save score info
     const params = [event.solverName, event.problemId, score, solutionS3Path];
