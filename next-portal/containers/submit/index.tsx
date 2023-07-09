@@ -1,10 +1,12 @@
 import SubmissionForm from "@/components/submit";
-import useProblemList from "../top/hooks/useProblemList";
+import useProblems from "../home/hooks/useProblems";
 
 const SubmissionFormContainer = () => {
-  const problems = useProblemList();
-  const problemIds = problems.data?.map((problem) => problem.id) ?? [];
-  return <SubmissionForm problemIds={problemIds} />;
+  const problems = useProblems();
+  const problemIds = problems.data?.problems.map((problem) =>
+    problem.problemId.toString()
+  );
+  return <SubmissionForm problemIds={problemIds ?? []} />;
 };
 
 export default SubmissionFormContainer;
