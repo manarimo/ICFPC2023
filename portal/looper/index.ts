@@ -11,7 +11,11 @@ interface LooperEvent {
     limit?: number;
     env?: Record<string, string>;
     exclude?: number[];
-    response?: (SolverRunnerResponse | null)[];
+    response?: (SolverRunnerResponse | SolverErrorResponse)[];
+}
+
+interface SolverErrorResponse {
+    Status: "FAILED";
 }
 
 type LooperResponseToMap = {
@@ -57,11 +61,11 @@ async function determineBestSeeds(): Promise<Record<number, string>> {
     return result;
 }
 
-async function saveResponse(responses: (SolverRunnerResponse | null)[]): Promise<void> {
+async function saveResponse(responses: (SolverRunnerResponse | SolverErrorResponse)[]): Promise<void> {
     const placeholders: string[] = [];
     const values: any[] = [];
-    const responsesNonNull = responses.filter((r) => r != null) as SolverRunnerResponse[];
-    responsesNonNull.forEach((r, i) => {
+    const successfulResponses = responses.filter((r) => r != null && !('Status' in r)) as SolverRunnerResponse[];
+    successfulResponses.forEach((r, i) => {
         placeholders.push(`($${i*4 + 1}, $${i*4 + 2}, $${i*4 + 3}, $${i*4 + 4})`);
         values.push(r.solverName);
         values.push(r.problemId);
