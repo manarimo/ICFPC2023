@@ -21,6 +21,7 @@ def main():
     best_dir = repositry_root / "solutions" / "synced-bests"
     delta = 0
     synced = 0
+    current_best = 0
     for sync_solution_file in best_dir.iterdir():
         if not sync_solution_file.name.endswith(".json"):
             continue
@@ -37,9 +38,10 @@ def main():
         else:
             print(f"not syncing {problem_id}: {my_score} > {sync_score} (+{my_score - sync_score})")
             delta += my_score - sync_score
+        current_best += max([sync_score, my_score, 0])
     print(f"the next submission will improve the global score by {delta}")
     print(f"synced {synced} files")
-
+    print(f"current best sum = {current_best}")
 
 
 if __name__ == '__main__':
