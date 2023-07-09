@@ -4,12 +4,14 @@ import { Context } from "aws-lambda";
 import { Spawner } from "../util/spawner";
 import { chmod, writeFile } from "fs/promises";
 import { paintSolution } from "../paint/paint";
+import { SpawnOptionsWithoutStdio } from "child_process";
 
 export interface SolverRunnerEvent {
     problemId: number;
     solverPath: string;
     solverName: string;
     seed?: string;
+    env?: Record<string, string>;
 }
 
 const dbHost = process.env['POSTGRES_HOST']!;
@@ -92,7 +94,14 @@ export async function handler(
     if (seedPath != null) {
         solverArgs.push(seedPath);
     }
-    const solver = new Spawner(solverPath, solverArgs);
+    let options: SpawnOptionsWithoutStdio = {};
+    if (event.env) {
+        options.env = {
+            ...process.env,
+            ...event.env
+        };
+    }
+    const solver = new Spawner(solverPath, solverArgs, options);
     const solution = await solver.run(problemPath);
     const solutionPath = '/tmp/solution.json';
     await writeFile(solutionPath, solution);
