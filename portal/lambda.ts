@@ -80,7 +80,15 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         score: number;
         solution_path: string;
       };
-      const result = await pg.query<SolutionRow>("SELECT * FROM solutions");
+      const query=`with g as (
+        select *,
+               rank() over (partition by problem_id order by score desc, id asc) as r
+        from solutions
+      )
+      select *
+      from g
+      where r=1;`;
+      const result = await pg.query<SolutionRow>(query);
       const solutions = result.rows.map((
         { id, solver_name, problem_id, score, solution_path },
       ) => ({
