@@ -94,7 +94,7 @@ class simulated_annealing {
 };
 
 simulated_annealing::simulated_annealing(double time_limit) : time_limit(time_limit) {
-    start_temp = pow(10, random::get_double(1, 4));
+    start_temp = pow(10, random::get_double(2, 5));
     temp = start_temp;
     temp_ratio = (END_TEMP - start_temp) / time_limit;
     sa_timer.start();
