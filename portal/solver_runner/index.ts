@@ -3,6 +3,7 @@ import { S3Util } from "../util/s3";
 import { Context } from "aws-lambda";
 import { Spawner } from "../util/spawner";
 import { chmod, writeFile } from "fs/promises";
+import { paintSolution } from "../paint/paint";
 
 interface SolverRunnerEvent {
     problemId: number;
@@ -101,9 +102,17 @@ export async function handler(
     const score = parseInt(await scorer.run());
     console.log(`Score: ${score}`);
 
+    // Generate solution image
+    const solutionImagePath = '/tmp/solution.svg';
+    await paintSolution(problemPath, solutionPath, solutionImagePath);
+
     // Save solution
     const solutionS3Path = `solutions/${event.solverName}/${event.problemId}.json`;
     await s3Util.uploadS3Object(solutionS3Path, solution);
+
+    // Save solution image
+    const solutionImageS3Path = `solutions/${event.solverName}/images/${event.problemId}.svg`;
+    await s3Util.uploadS3ObjectFromFile(solutionImageS3Path, solutionImagePath);
 
     // Save score info
     const params = [event.solverName, event.problemId, score, solutionS3Path];
