@@ -3,8 +3,8 @@
 require 'json'
 
 res = []
-(1..90).each do |i|
-    res << { problemId: i, solverPath: "solver/kawatea_block_pillar", solverName: "kawatea_block_pillar" }
+(1..2).each do |i|
+    res << { problemId: i, solverPath: "solver/charibert", solverName: "charibert", seed: "__best__" }
 end
 
 puts JSON.dump(res)

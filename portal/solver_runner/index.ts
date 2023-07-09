@@ -37,6 +37,7 @@ async function downloadSolver(path: string): Promise<string> {
 async function downloadScorer(): Promise<string> {
     const fsPath = `/tmp/scorer`;
     await s3Util.downloadS3Object(`solver/scorer`, fsPath);
+    await chmod(fsPath, 0o755);
     return fsPath;
 }
 
@@ -60,6 +61,7 @@ async function downloadSeed(problemId: number, seed?: string): Promise<string | 
         }
         seedToUse = bestSeed;
     }
+    console.log(`Using ${seedToUse} as seed solution`);
     await s3Util.downloadS3Object(`solutions/${seedToUse}/${problemId}.json`, fsPath);
     return fsPath;
 }
