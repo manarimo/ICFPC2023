@@ -4,18 +4,18 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub struct P {
-    pub(crate) x: f64,
-    pub(crate) y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl P {
-    pub(crate) fn arg(&self) -> f64 {
+    pub fn arg(&self) -> f64 {
         self.y.atan2(self.x)
     }
-    pub(crate) fn abs(&self) -> f64 {
+    pub fn abs(&self) -> f64 {
         (self.x * self.x + self.y * self.y).sqrt()
     }
-    pub(crate) fn d2(&self, rhs: &Self) -> f64 {
+    pub fn d2(&self, rhs: &Self) -> f64 {
         (self.x - rhs.x) * (self.x - rhs.x) + (self.y - rhs.y) * (self.y - rhs.y)
     }
 }

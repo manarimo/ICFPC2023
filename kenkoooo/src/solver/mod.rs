@@ -3,9 +3,6 @@ use crate::{problem::Problem, types::P};
 mod sa;
 pub use sa::simulated_annealing;
 
-mod sa2;
-pub use sa2::simulated_annealing2;
-
 const RADIUS: f64 = 10.0;
 
 pub fn is_valid(problem: &Problem, placements: &[P]) -> bool {
