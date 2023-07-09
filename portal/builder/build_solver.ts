@@ -36,15 +36,15 @@ export async function handler(
         // Run build.sh in the specified directory
         console.log('Building binary');
         const build = new Spawner(
-            './build.sh',
+            `./${payload.solverName}.sh`,
              [],
-             {cwd: `${prefix}/${payload.path}`}
+             {cwd: `${prefix}/build_recipes`}
         );
         const buildOutput = await build.run();
         console.log(buildOutput);
 
         // Copy the output artifact to S3
-        await s3Util.uploadS3ObjectFromFile(`solver/${payload.solverName}`, `${prefix}/${payload.path}/a.out`);
+        await s3Util.uploadS3ObjectFromFile(`solver/${payload.solverName}`, `${prefix}/build_recipes/a.out`);
     } catch(e) {
         if (e instanceof Error) {
             return {
