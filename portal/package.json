@@ -12,7 +12,10 @@
     "postbuild_runner": "cd dist && zip -r index_runner.zip index.js*",
     "prebuild_looper": "rm -rf dist",
     "build_looper": "esbuild looper/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
-    "postbuild_looper": "cd dist && zip -r index_looper.zip index.js*"
+    "postbuild_looper": "cd dist && zip -r index_looper.zip index.js*",
+    "prebuild_syncer": "rm -rf dist",
+    "build_syncer": "esbuild syncer/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+    "postbuild_syncer": "cd dist && zip -r index_syncer.zip index.js*"
 
   },
   "author": "",
