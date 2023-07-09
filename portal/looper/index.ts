@@ -4,52 +4,71 @@ import { SolverRunnerEvent } from "../solver_runner";
 interface LooperEvent {
     label: string;
     count: number;
+    lightningSolver: string;
+    pillarSolver: string;
+    limit?: number;
+    env?: Record<string, string>;
 }
 
-interface LooperResponse {
-    label: string;
-    nextCount: number;
+type LooperResponseToMap = {
     items: SolverRunnerEvent[];
+} & LooperEvent;
+
+interface LooperResponseToEnd {
+    end: true
 }
+
+type LooperResponse = LooperResponseToMap | LooperResponseToEnd;
 
 const discordWebhook = process.env['DISCORD_WEBHOOK']!;
 
-export async function handler(
-  event: LooperEvent,
-  context: Context,
-): Promise<LooperResponse> {
+async function say(message: string): Promise<void> {
     await fetch(discordWebhook, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            content: `${event.label}のループ${event.count}回目をじっこうします！`
+            content: message
         })
     });
+}
+
+export async function handler(
+  event: LooperEvent,
+  context: Context,
+): Promise<LooperResponse> {
+    if (event.limit && event.count > event.limit) {
+        await say(`${event.label}が終わったんじゃも！`);
+        return {
+            end: true
+        };
+    }
+
+    // Make Kolog work
+    await say(`${event.label}のループ${event.count}回目をじっこうします！`);
 
     const items: SolverRunnerEvent[] = [];
     for (let i = 1; i <= 90; ++i) {
+        let solverPath: string;
         if (i <= 55) {
-            items.push({
-                problemId: i,
-                solverPath: "solver/charibert",
-                solverName: `${event.label}-${event.count}-charibert`,
-                seed: '__best__'
-            });
+            solverPath = `solver/${event.lightningSolver}`;
         } else {
-            items.push({
-                problemId: i,
-                solverPath: "solver/charibert_pillar",
-                solverName: `${event.label}-${event.count}-charibert`,
-                seed: '__best__'
-            });
+            solverPath = `solver/${event.pillarSolver}`;
         }
+
+        items.push({
+            problemId: i,
+            solverPath: solverPath,
+            solverName: `${event.label}-${event.count}`,
+            seed: '__best__',
+            env: event.env
+        });
     }
 
     return {
-        label: event.label,
-        nextCount: event.count + 1,
+        ...event,
+        count: event.count + 1,
         items
     };
 }
