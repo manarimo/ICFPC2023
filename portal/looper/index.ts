@@ -4,10 +4,11 @@ import { SolverRunnerEvent } from "../solver_runner";
 interface LooperEvent {
     label: string;
     count: number;
-    lightningSolver: string;
-    pillarSolver: string;
+    lightningSolver?: string;
+    pillarSolver?: string;
     limit?: number;
     env?: Record<string, string>;
+    exclude?: number[];
 }
 
 type LooperResponseToMap = {
@@ -50,20 +51,27 @@ export async function handler(
 
     const items: SolverRunnerEvent[] = [];
     for (let i = 1; i <= 90; ++i) {
-        let solverPath: string;
-        if (i <= 55) {
+        if (event.exclude) {
+            if (event.exclude.indexOf(i) != -1) {
+                continue;
+            }
+        }
+        let solverPath: string | undefined = undefined;
+        if (i <= 55 && event.lightningSolver) {
             solverPath = `solver/${event.lightningSolver}`;
-        } else {
+        } else if (event.pillarSolver) {
             solverPath = `solver/${event.pillarSolver}`;
         }
 
-        items.push({
-            problemId: i,
-            solverPath: solverPath,
-            solverName: `${event.label}-${event.count}`,
-            seed: '__best__',
-            env: event.env
-        });
+        if (solverPath) {
+            items.push({
+                problemId: i,
+                solverPath: solverPath,
+                solverName: `${event.label}-${event.count}`,
+                seed: '__best__',
+                env: event.env
+            });
+        }
     }
 
     return {
