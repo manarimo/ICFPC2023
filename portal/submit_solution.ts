@@ -1,25 +1,14 @@
-import { APIGatewayEventRequestContextV2, APIGatewayProxyEventV2, Context } from "aws-lambda";
-import { GatewayEvent } from "./types";
-import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { writeFile } from "fs/promises";
-import { spawn } from 'child_process';
+import { APIGatewayProxyEventV2, Context } from "aws-lambda";
+import { chmod, writeFile } from "fs/promises";
 import { Pool as PgPool } from 'pg';
+import { S3Util } from "./util/s3";
+import { Spawner } from "./util/spawner";
 
-const s3 = new S3Client({});
+const s3Util = new S3Util();
 
 async function downloadProblem(id: number): Promise<string> {
-    const command = new GetObjectCommand({
-        Bucket: "icfpc2023-manarimo-3mrzsd",
-        Key: `problems/${id}.json`
-    });
-    const result = await s3.send(command);
     const tmppath = `/tmp/problem-tmp-${id}.json`;
-    const content = await result.Body?.transformToString();
-    if (content == undefined) {
-        throw new Error(`Cannot read problem file ${id}`);
-    }
-    await writeFile(tmppath, content);
-
+    await s3Util.downloadS3Object(`problems/${id}.json`, tmppath);
     return tmppath;
 }
 
@@ -27,6 +16,13 @@ async function saveSolution(id: string, content: string): Promise<string> {
     const tmppath = `/tmp/solution-tmp-${id}.json`;
     await writeFile(tmppath, content);
     return tmppath;
+}
+
+async function downloadScorer(): Promise<string> {
+    const fsPath = `/tmp/scorer`;
+    await s3Util.downloadS3Object(`solver/scorer`, fsPath);
+    await chmod(fsPath, 0o755);
+    return fsPath;
 }
 
 export async function submitSolutionHandler(
@@ -63,35 +59,15 @@ export async function submitSolutionHandler(
     ]);
 
     // Run scorer
-    // /opt/scorer is provided by a Lambda layer.
-    // It's a x86_64 binary built from amylase/scorer/score.cpp
-    const scorer = spawn('/opt/scorer', [problemPath, solutionPath]);
-    const score = await new Promise((resolve, reject) => {
-        scorer.stdout.on('data', (data) => {
-            console.log(`Scorer printed ${data}`);
-            resolve(parseInt(data));
-        });
-        scorer.stderr.on('data', (data) => {
-            console.error(data);
-        });
-    });
-
+    const scorerPath = await downloadScorer();
+    const scorer = new Spawner(scorerPath, [problemPath, solutionPath]);
+    const score = parseInt(await scorer.run());
     console.log(`score: ${score}`);
 
     // Upload solution to S3
     const key = `solutions/${solverName}/${problemId}.json`;
-    const command = new PutObjectCommand({
-        Bucket: "icfpc2023-manarimo-3mrzsd",
-        Key: key,
-        Body: content,
-    })
-    try {
-        const result = await s3.send(command);
-        console.log(result);
-        console.log(`Stored file as ${key}`);
-    } catch (e) {
-        console.error(e);
-    }
+    s3Util.uploadS3Object(key, content);
+    console.log(`Stored file as ${key}`);
 
     // Update solution database
     const params = [solverName, parseInt(problemId), score, key];

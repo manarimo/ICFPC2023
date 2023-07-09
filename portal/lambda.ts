@@ -9,6 +9,7 @@ import { handler as buildHandler } from "./builder/build_solver";
 
 const dbHost = process.env["POSTGRES_HOST"]!;
 const password = process.env["POSTGRES_PASSWORD"]!;
+const discordWebhook = process.env['DISCORD_WEBHOOK']!;
 
 const pg = new Pool({
   user: "postgres",
@@ -31,6 +32,8 @@ export async function handler(
     result = await submitSolutionHandler(event, context, pg);
   } else if (event.path == "/build") {
     result = await buildHandler(event, context);
+  } else if (event.path == "/notify") {
+    result = await notificationHandler(event);
   } else {
     result = await apiHandler(event);
   }
@@ -97,4 +100,14 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
       };
     }
   }
+}
+
+async function notificationHandler(event: APIGatewayProxyEventV2 & { path: string }): Promise<void> {
+  await fetch(discordWebhook, {
+    method: 'POST',
+    headers: {
+      'Content-Type': "application/json"
+    },
+    body: event.body
+  });
 }
