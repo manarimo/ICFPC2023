@@ -5,7 +5,7 @@ import { Spawner } from "../util/spawner";
 import { chmod, writeFile } from "fs/promises";
 import { paintSolution } from "../paint/paint";
 
-interface SolverRunnerEvent {
+export interface SolverRunnerEvent {
     problemId: number;
     solverPath: string;
     solverName: string;
