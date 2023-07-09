@@ -3,34 +3,29 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include "../library/problem.h"
+#include <chrono>
+#include <cstdlib>
+#include "problem.h"
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
 #endif
-#include "../library/scoring.h"
-#include "../library/solution.h"
+#include "scoring.h"
+#include "solution.h"
 
 using namespace std;
 
 class timer {
     public:
     void start() {
-        origin = rdtsc();
+        origin = chrono::system_clock::now();
     }
     
     inline double get_time() {
-        return (rdtsc() - origin) * SECONDS_PER_CLOCK;
+        auto current = chrono::system_clock::now();
+        return chrono::duration_cast<std::chrono::milliseconds>(current - origin).count() / 1000.;
     }
     
-    private:
-    constexpr static double SECONDS_PER_CLOCK = 1 / 3.0e9;
-    unsigned long long origin;
-    
-    inline static unsigned long long rdtsc() {
-        unsigned long long lo, hi;
-        __asm__ volatile ("rdtsc" : "=a" (lo), "=d" (hi));
-        return (hi << 32) | lo;
-    }
+    chrono::time_point<chrono::system_clock> origin;
 };
 
 class random {
@@ -74,6 +69,14 @@ class random {
     }
 };
 
+const char* getenv_or(const char* varname, const char* fallback) {
+    const char* value = getenv(varname);
+    return (value != nullptr) ? value : fallback;
+}
+
+const double START_TEMP = atof(getenv_or("START_TEMP", "10000"));
+const double END_TEMP = atof(getenv_or("END_TEMP", "1e-9"));
+
 class simulated_annealing {
     public:
     simulated_annealing(double time_limit);
@@ -85,8 +88,6 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double START_TEMP = 10000;
-    constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
     double log_probability[LOG_SIZE + 1];
@@ -132,21 +133,20 @@ void simulated_annealing::print() const {
     fprintf(stderr, "rejected: %lld\n", rejected);
 }
 
-const double INIT_TIME_LIMIT = 10;
-const double MAIN_TIME_LIMIT = 250;
+const double INIT_TIME_LIMIT = atof(getenv_or("INIT_TIME_LIMIT", "10"));
+const double MAIN_TIME_LIMIT = atof(getenv_or("MAIN_TIME_LIMIT", "100"));
 const int MAX_MUSICIAN = 1000;
 const int MAX_ATTENDEE = 700;
 const double RADIUS = 10;
 const double RADIUS2 = RADIUS * RADIUS;
 const double BLOCK_RADIUS = 5;
-const double VOLUME = 10;
 manarimo::problem_t problem;
 double stage_left;
 double stage_right;
 double stage_bottom;
 double stage_top;
-double max_diff_width;
-double max_diff_height;
+const double max_diff_width = atof(getenv_or("MAX_DIFF_DISTANCE", "1"));
+const double max_diff_height = atof(getenv_or("MAX_DIFF_DISTANCE", "1"));
 vector<int> instrument[MAX_MUSICIAN];
 vector<geo::P> placements;
 vector<pair<double, int>> attendee_angles[MAX_MUSICIAN];
@@ -160,7 +160,6 @@ int tmp_blocked_count[MAX_ATTENDEE];
 double tmp_q[MAX_MUSICIAN];
 double tmp_impact_sum[MAX_MUSICIAN];
 vector<geo::P> best_placements;
-vector<double> volumes;
 
 void input() {
     manarimo::load_problem(std::cin, problem);
@@ -169,19 +168,17 @@ void input() {
     stage_right = stage_left + problem.stage_width;
     stage_left += RADIUS;
     stage_right -= RADIUS;
-    max_diff_width = (stage_right - stage_left) / 10;
     
     stage_bottom = problem.stage_bottom_left.Y;
     stage_top = stage_bottom + problem.stage_height;
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
-    max_diff_height = (stage_top - stage_bottom) / 10;
     
     for (int i = 0; i < problem.musicians.size(); i++) instrument[problem.musicians[i]].push_back(i);
 }
 
-void output(const vector<geo::P>& placements, const vector<double>& volumes) {
-    manarimo::print_solution(std::cout, manarimo::solution_t(placements, volumes));
+void output(const vector<geo::P>& placements) {
+    manarimo::print_solution(std::cout, manarimo::solution_t(placements));
 }
 
 double dist2(const geo::P& p1, const geo::P& p2) {
@@ -282,14 +279,13 @@ double score_all_approximate() {
         for (int j = 0; j < problem.attendees.size(); j++) {
             if (blocked_count[i][j] == 0) impact_sum[i] += calc_one_score(placements[i], problem.attendees[j].pos, problem.attendees[j].tastes[problem.musicians[i]]);
         }
-        sum += ceil(VOLUME * q[i] * max(impact_sum[i], 0.0));
+        sum += ceil(q[i] * impact_sum[i]);
     }
     return sum;
 }
 
 double score_all_exact() {
     calc_blocked();
-    volumes.clear();
     double sum = 0;
     for (int i = 0; i < problem.musicians.size(); i++) {
         double q = 1;
@@ -297,15 +293,8 @@ double score_all_exact() {
             if (i == j) continue;
             q += 1 / dist(placements[i], placements[j]);
         }
-        double tmp = 0;
         for (int j = 0; j < problem.attendees.size(); j++) {
-            if (blocked_count[i][j] == 0) tmp += ceil(VOLUME * q * calc_one_score(placements[i], problem.attendees[j].pos, problem.attendees[j].tastes[problem.musicians[i]]));
-        }
-        if (tmp >= 0) {
-            sum += tmp;
-            volumes.push_back(VOLUME);
-        } else {
-            volumes.push_back(0);
+            if (blocked_count[i][j] == 0) sum += ceil(q * calc_one_score(placements[i], problem.attendees[j].pos, problem.attendees[j].tastes[problem.musicians[i]]));
         }
     }
     return sum;
@@ -408,11 +397,18 @@ void sa_no_block() {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     input();
     
-    sa_no_block();
-    placements = best_placements;
+    if (argc < 2) {
+        sa_no_block();
+        placements = best_placements;
+    } else {
+        manarimo::solution_t intermediate_solution;
+        manarimo::load_solution(string(argv[1]), intermediate_solution);
+        best_placements = intermediate_solution.as_p();
+        placements = best_placements;
+    }
     double best_score = score_all_approximate();
     double current_score = best_score;
     
@@ -445,6 +441,7 @@ int main() {
             }
             if (ng) continue;
             int in = problem.musicians[m];
+            double next_score = current_score;
             for (int i = 0; i < problem.musicians.size(); i++) {
                 tmp_q[i] = q[i];
                 tmp_impact_sum[i] = impact_sum[i];
@@ -487,9 +484,9 @@ int main() {
                     if (blocked_count[i][attendee] == 0) tmp_impact_sum[i] -= calc_one_score(placements[i], problem.attendees[attendee].pos, problem.attendees[attendee].tastes[problem.musicians[i]]);
                 }
             }
-            double next_score = 0;
             for (int i = 0; i < problem.musicians.size(); i++) {
-                next_score += ceil(VOLUME * tmp_q[i] * max(tmp_impact_sum[i], 0.0));
+                next_score -= ceil(q[i] * impact_sum[i]);
+                next_score += ceil(tmp_q[i] * tmp_impact_sum[i]);
             }
             if (sa.accept(current_score, next_score)) {
                 current_score = next_score;
@@ -534,26 +531,26 @@ int main() {
                 double new_dist = 1 / dist(placements[m2], placements[musician]);
                 tmp_q[musician] = q[musician] - 1 / dist(placements[m1], placements[musician]) + new_dist;
                 tmp_q[m1] += new_dist;
-                next_score -= ceil(VOLUME * q[musician] * max(impact_sum[musician], 0.0));
-                next_score += ceil(VOLUME * tmp_q[musician] * max(impact_sum[musician], 0.0));
+                next_score -= ceil(q[musician] * impact_sum[musician]);
+                next_score += ceil(tmp_q[musician] * impact_sum[musician]);
             }
             for (int musician : instrument[in2]) {
                 if (musician == m2) continue;
                 double new_dist = 1 / dist(placements[m1], placements[musician]);
                 tmp_q[musician] = q[musician] - 1 / dist(placements[m2], placements[musician]) + new_dist;
                 tmp_q[m2] += new_dist;
-                next_score -= ceil(VOLUME * q[musician] * max(impact_sum[musician], 0.0));
-                next_score += ceil(VOLUME * tmp_q[musician] * max(impact_sum[musician], 0.0));
+                next_score -= ceil(q[musician] * impact_sum[musician]);
+                next_score += ceil(tmp_q[musician] * impact_sum[musician]);
             }
             double is1 = 0, is2 = 0;
-            next_score -= ceil(VOLUME * q[m1] * max(impact_sum[m1], 0.0));
-            next_score -= ceil(VOLUME * q[m2] * max(impact_sum[m2], 0.0));
+            next_score -= ceil(q[m1] * impact_sum[m1]);
+            next_score -= ceil(q[m2] * impact_sum[m2]);
             for (int i = 0; i < problem.attendees.size(); i++) {
                 if (blocked_count[m1][i] == 0) is2 += calc_one_score(placements[m1], problem.attendees[i].pos, problem.attendees[i].tastes[in2]);
                 if (blocked_count[m2][i] == 0) is1 += calc_one_score(placements[m2], problem.attendees[i].pos, problem.attendees[i].tastes[in1]);
             }
-            next_score += ceil(VOLUME * tmp_q[m1] * max(is1, 0.0));
-            next_score += ceil(VOLUME * tmp_q[m2] * max(is2, 0.0));
+            next_score += ceil(tmp_q[m1] * is1);
+            next_score += ceil(tmp_q[m2] * is2);
             if (sa.accept(current_score, next_score)) {
                 current_score = next_score;
                 swap(placements[m1], placements[m2]);
@@ -578,12 +575,10 @@ int main() {
         }
     }
     
+    output(best_placements);
+    
     placements = best_placements;
-    best_score = score_all_exact();
-    
-    output(best_placements, volumes);
-    
-    fprintf(stderr, "best_score : %lf\n", best_score);
+    fprintf(stderr, "best_score : %lf\n", score_all_exact());
     
     return 0;
 }
