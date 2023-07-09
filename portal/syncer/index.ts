@@ -3,6 +3,7 @@ import { S3Util } from "../util/s3";
 import { Pool } from "pg";
 import { readFile, rm } from "fs/promises";
 import { discordSay } from "../util/discord";
+import { setTimeout } from "timers/promises";
 
 const dbHost = process.env["POSTGRES_HOST"]!;
 const password = process.env["POSTGRES_PASSWORD"]!;
@@ -26,20 +27,27 @@ async function downloadAndSubmit(problemId: number, solutionS3Path: string): Pro
     await s3Util.downloadS3Object(solutionS3Path, tmpPath);
     const solution = await readFile(tmpPath);
 
-    const response = await fetch('https://api.icfpcontest.com/submission', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${portalToken}`
-        },
-        body: JSON.stringify({
-            problem_id: problemId,
-            contents: solution.toString()
-        })
-    });
-    if (Math.floor(response.status / 100) != 2) {
-        const error = await response.text();
-        throw new Error(`Failed to submit ${problemId}: ${error}`);
+    for (let i = 0; i < 3; ++i) {
+        const response = await fetch('https://api.icfpcontest.com/submission', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${portalToken}`
+            },
+            body: JSON.stringify({
+                problem_id: problemId,
+                contents: solution.toString()
+            })
+        });
+
+        const statusClass = Math.floor(response.status / 100);
+        if (statusClass != 2) {
+            const error = await response.text();
+            console.error(`Failed to submit ${problemId}. Retrying...`);
+            await setTimeout(1000);
+        } else {
+            break;
+        }
     }
     console.log(`Submitted ${problemId}`);
     await rm(tmpPath);
