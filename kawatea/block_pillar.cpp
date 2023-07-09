@@ -303,7 +303,7 @@ double score_all_exact() {
         }
         if (tmp >= 0) {
             sum += tmp;
-            volumes.push_back(10);
+            volumes.push_back(VOLUME);
         } else {
             volumes.push_back(0);
         }
