@@ -43,8 +43,12 @@ async function downloadAndSubmit(problemId: number, solutionS3Path: string): Pro
         const statusClass = Math.floor(response.status / 100);
         if (statusClass != 2) {
             const error = await response.text();
-            console.error(`Failed to submit ${problemId}. Retrying...`);
-            await setTimeout(1000);
+            if (i == 2) {
+                throw new Error(`Failed to submit ${problemId}: ${error}`);
+            } else {
+                console.error(`Failed to submit ${problemId}. Retrying...`);
+                await setTimeout(1000);
+            }
         } else {
             break;
         }
