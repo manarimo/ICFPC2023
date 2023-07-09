@@ -57,10 +57,14 @@ export async function handler(
             }
         }
         let solverPath: string | undefined = undefined;
-        if (i <= 55 && event.lightningSolver) {
-            solverPath = `solver/${event.lightningSolver}`;
-        } else if (event.pillarSolver) {
-            solverPath = `solver/${event.pillarSolver}`;
+        if (i <= 55) {
+            if (event.lightningSolver) {
+                solverPath = `solver/${event.lightningSolver}`;
+            }
+        } else {
+            if (event.pillarSolver) {
+                solverPath = `solver/${event.pillarSolver}`;
+            }
         }
 
         if (solverPath) {
