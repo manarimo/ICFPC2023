@@ -11,7 +11,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .for_each(|(problem_id, mut solution, problem)| {
             let mut cur_score = score(&problem, &solution.placements);
             loop {
-                let result = simulated_annealing(&problem, &solution);
+                let start_temp = std::env::var("START_TEMP")
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(1e4);
+                let time_limit = std::env::var("TIME_LIMIT")
+                    .ok()
+                    .and_then(|s| s.parse::<f64>().ok())
+                    .unwrap_or(60.0);
+                let result = simulated_annealing(&problem, &solution, start_temp, time_limit);
                 solution = result.0;
                 let score = score(&problem, &solution.placements);
                 if score <= cur_score {

@@ -5,12 +5,12 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
-#include "../library/problem.h"
+#include "problem.h"
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
 #endif
-#include "../library/scoring.h"
-#include "../library/solution.h"
+#include "scoring.h"
+#include "solution.h"
 
 using namespace std;
 

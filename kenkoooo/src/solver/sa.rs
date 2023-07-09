@@ -4,18 +4,14 @@ use rand::{thread_rng, Rng};
 
 use crate::{is_valid, score, types::P, Problem, Solution};
 
-pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> (Solution, f64) {
+pub fn simulated_annealing(
+    problem: &Problem,
+    solution: &Solution,
+    start_temp: f64,
+    time_limit: f64,
+) -> (Solution, f64) {
     let placements = solution.placements.clone();
     let score = score::score(&problem, &placements);
-
-    let start_temp = std::env::var("START_TEMP")
-        .ok()
-        .and_then(|s| s.parse::<f64>().ok())
-        .unwrap_or(1e4);
-    let time_limit = std::env::var("TIME_LIMIT")
-        .ok()
-        .and_then(|s| s.parse::<f64>().ok())
-        .unwrap_or(60.0);
     log::info!("start_temp={} time_limit={}", start_temp, time_limit);
     const END_TEMP: f64 = 1.0;
 
