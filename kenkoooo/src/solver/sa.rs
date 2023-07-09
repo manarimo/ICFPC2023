@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use rand::{rngs::StdRng, Rng, SeedableRng};
+use rand::{thread_rng, Rng};
 
 use crate::{is_valid, score, types::P, Problem, Solution};
 
@@ -19,7 +19,7 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> (Solution,
     log::info!("start_temp={} time_limit={}", start_temp, time_limit);
     const END_TEMP: f64 = 1.0;
 
-    let mut rng = StdRng::seed_from_u64(42);
+    let mut rng = thread_rng();
     let mut state = State { score, placements };
     let mut best = state.clone();
     let start_time = Instant::now();
@@ -69,6 +69,8 @@ pub fn simulated_annealing(problem: &Problem, solution: &Solution) -> (Solution,
             state.move_backward(m);
         }
     }
+
+    log::info!("iterated {total_trial} times");
     (
         Solution {
             placements: best.placements,
