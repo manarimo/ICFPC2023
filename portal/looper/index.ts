@@ -43,7 +43,7 @@ pg.on('error', (err) => {
   console.error('pg error', err);
 });
 
-async function determineBestSeeds(tag?: string): Promise<Record<number, string>> {
+async function determineBestSeeds(tag?: string): Promise<Record<number, { seed: string, tag: string }>> {
     let params: any = [];
     let tagClause: string = '';
     if (tag) {
@@ -62,9 +62,12 @@ async function determineBestSeeds(tag?: string): Promise<Record<number, string>>
         where r=1; 
     `, params);
 
-    const result: Record<number, string> = {};
+    const result: Record<number, { seed: string, tag: string }> = {};
     for (const row of response.rows) {
-        result[row['problem_id']] = row['solver_name'];
+        result[row['problem_id']] = {
+            seed: row['solver_name'],
+            tag: row['tag'],
+        };
     }
     return result;
 }
@@ -137,7 +140,8 @@ export async function handler(
                 env: event.env
             };
             if (bestSeeds[i]) {
-                item.seed = bestSeeds[i];
+                item.seed = bestSeeds[i].seed;
+                item.tag = bestSeeds[i].tag;
             }
             items.push(item);
         }
