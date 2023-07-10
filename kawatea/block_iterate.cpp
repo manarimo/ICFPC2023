@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -133,6 +134,11 @@ double simulated_annealing::get_start_temp() const {
     return start_temp;
 }
 
+const char* getenv_or(const char* varname, const char* fallback) {
+    const char* value = getenv(varname);
+    return (value != nullptr) ? value : fallback;
+}
+
 const double INIT_TIME_LIMIT = 10;
 const double MAIN_TIME_LIMIT = 60;
 const int MAX_MUSICIAN = 1500;
@@ -141,6 +147,8 @@ const double RADIUS = 10;
 const double RADIUS2 = RADIUS * RADIUS;
 const double BLOCK_RADIUS = 5;
 const double VOLUME = 10;
+const double MAX_DISTANCE_POW_MIN = atoi(getenv_or("MAX_DISTANCE_POW_MIN", "-4"));
+const double MAX_DISTANCE_POW_MAX = atoi(getenv_or("MAX_DISTANCE_POW_MAX", "1"));
 manarimo::problem_t problem;
 double stage_left;
 double stage_right;
@@ -176,7 +184,7 @@ void input() {
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
     
-    max_diff_width = max_diff_height = pow(10, random::get_double(-4, 1));
+    max_diff_width = max_diff_height = pow(10, random::get_double(MAX_DISTANCE_POW_MIN, MAX_DISTANCE_POW_MAX));
 }
 
 void output(const vector<geo::P>& placements, const vector<double>& volumes) {
