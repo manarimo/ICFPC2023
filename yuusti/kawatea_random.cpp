@@ -104,7 +104,7 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double START_TEMP = 1e4;
+    constexpr static double START_TEMP = 1;
     constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
@@ -500,8 +500,8 @@ int main(int argc, char *argv[]) {
 
     double best_score;
     if (argc < 2) {
-        sa_no_block();
-        placements = best_placements;
+        // sa_no_block();
+        random_init();
         best_score = score_all();
         fprintf(stderr, "no file loaded, initial score: %lf\n", best_score);
     } else {
@@ -521,7 +521,6 @@ int main(int argc, char *argv[]) {
     double default_max_diff_width = problem.stage_width / 10;
     double default_max_diff_height = problem.stage_height / 10;
     double k = 1.0;
-    double reduction = 0.999;
     for (int times = 0; times < 10000000; ++times) {
         fprintf(stderr, "default max diff width: %lf, default max diff height: %lf , reduction: %lf\n", default_max_diff_width, default_max_diff_height, reduction);
         double current_score = best_score;
@@ -530,9 +529,9 @@ int main(int argc, char *argv[]) {
         vector<pair<int, int>> new_blocked;
         simulated_annealing sa(MAIN_TIME_LIMIT);
         while (!sa.end()) {
-            max_diff_width = max(0.5, default_max_diff_width);
-            max_diff_height = max(0.5, default_max_diff_height);
             k *= reduction;
+            max_diff_width = max(0.001, default_max_diff_width * k);
+            max_diff_height = max(0.001, default_max_diff_height * k);
 
             unchanged++;
             if (unchanged == 10000) {
@@ -850,9 +849,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "best_score : %lf\n", best_score);
         fprintf(stderr, "best_score increase so far : %lf\n", best_score - init_best);
         fprintf(stderr, "true score : %lf\n", score_all());
-        fprintf(stderr, "storing to %s\n", (file_name + "-" + to_string(times) + ".json").c_str());
+        fprintf(stderr, "storing to %s\n", (file_name + "-" + to_string(times) + "-" + to_string(best_score) + ".json").c_str());
 
-        store_to_file(best_placements, volumes, file_name + "-" + to_string(times) + ".json");
+        store_to_file(best_placements, volumes, file_name + "-" + to_string(times) + "-" + to_string(best_score) + ".json");
         sa.print();
     }
 
