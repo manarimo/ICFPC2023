@@ -32,28 +32,38 @@ class solver_t {
     vector<int> placements;
     double current_score;
 
-    solver_t(problem_t& prob) : prob(prob) {
-        init();
+    solver_t(problem_t& prob, int corner, int W, int H) : prob(prob) {
+        init(corner, W, H);
     }
 
-    void init() {
+    void init(int corner, int W, int H) {
         N = prob.musicians.size();
-        W = prob.stage_width / 10 - 1;
-        H = prob.stage_height / 10 - 1;
-        /*
-        Left = prob.stage_bottom_left.first + 10;
-        Bottom = prob.stage_bottom_left.second + 10;
-        Right = prob.stage_bottom_left.first + prob.stage_width - 10;
-        Top = prob.stage_bottom_left.second + prob.stage_height - 10;
-        XInterval = (Right - Left) / (W - 1);
-        YInterval = (Top - Bottom) / (H - 1);
-        */
+        W = W;
+        H = H;
         XInterval = 10;
         YInterval = 10;
-        Right = prob.stage_bottom_left.first + prob.stage_width - 10;
-        Top = prob.stage_bottom_left.second + prob.stage_height - 10;
-        Left = Right - (W-1) * XInterval;
-        Bottom = Top - (H-1) * YInterval;
+        if (corner == 0) {
+            Left = prob.stage_bottom_left.first + 10;
+            Bottom = prob.stage_bottom_left.second + 10;
+            Right = Left + (W - 1) * XInterval;
+            Top = Bottom + (H - 1) * YInterval;
+        } else if (corner == 1) {
+            Left = prob.stage_bottom_left.first + 10;
+            Top = prob.stage_bottom_left.second + prob.stage_height - 10;
+            Right = Left + (W - 1) * XInterval;
+            Bottom = Top  - (H - 1) * YInterval;
+
+        } else if (corner == 2) {
+            Right = prob.stage_bottom_left.first + prob.stage_width - 10;
+            Top = prob.stage_bottom_left.second + prob.stage_height - 10;
+            Left = Right - (W - 1) * XInterval;
+            Bottom = Top  - (H - 1) * YInterval;
+        } else {
+            Right = prob.stage_bottom_left.first + prob.stage_width - 10;
+            Bottom = prob.stage_bottom_left.second + 10;
+            Left = Right - (W - 1) * XInterval;
+            Top = Bottom + (H - 1) * YInterval;
+        }
         // bottom
         for (int i = 0; i < W && positions.size() < N; i++) {
             bottomPositions.push_back(positions.size());
@@ -180,37 +190,56 @@ void output(const vector<geo::P>& placements) {
 int main() {
     problem_t prob;
     load_problem(cin, prob);
-    solver_t solver(prob);
     
-    double best_score = -1e18;
-    solution_t best_solution;
-    sa::simulated_annealing sa;
-    while (!sa.end()) {
-        double rnd = xor32() / pow(2.0, 32);
-        int x = lower_bound(solver.acc_score_sensitivity.begin(), solver.acc_score_sensitivity.end(), rnd) - solver.acc_score_sensitivity.begin(); //xor32() % solver.M;
-        // int x = xor32() % solver.M;
-        int y = xor32() % (solver.N - 1);
-        if (y >= x) y++;
-        double current_score = solver.current_score;
-        double next_score = current_score + solver.score_diff(x, y);
-        if (sa.accept(current_score, next_score)) {
-            // use
-            solver.swap(x, y);
-            if (solver.current_score > best_score) {
-                best_score = solver.current_score;
-                best_solution = solver.get_solution();
+    double global_best_score = -1e18;
+    solution_t global_best_solution;
+        for (int W = 3; W < prob.stage_width / 10 - 1; W++) {
+        for (int H = 3; H < prob.stage_height / 10 - 1; H++) {
+            if (W * H < prob.musicians.size()) {
+                continue;
             }
-        } else {
-            // not use
+            if ((W + H - 2) * 2 > prob.musicians.size() - 10) {
+                continue;
+            }
+            for (int i = 0; i < 4; i++) {
+                cerr << "W = " << W << ", H = " << H << ", corner = " << i << endl;
+                solver_t solver(prob, i, 10, 10);
+                double best_score = -1e18;
+                solution_t best_solution;
+                sa::simulated_annealing sa;
+                while (!sa.end()) {
+                    double rnd = xor32() / pow(2.0, 32);
+                    int x = lower_bound(solver.acc_score_sensitivity.begin(), solver.acc_score_sensitivity.end(), rnd) - solver.acc_score_sensitivity.begin(); //xor32() % solver.M;
+                    // int x = xor32() % solver.M;
+                    int y = xor32() % (solver.N - 1);
+                    if (y >= x) y++;
+                    double current_score = solver.current_score;
+                    double next_score = current_score + solver.score_diff(x, y);
+                    if (sa.accept(current_score, next_score)) {
+                        // use
+                        solver.swap(x, y);
+                        if (solver.current_score > best_score) {
+                            best_score = solver.current_score;
+                            best_solution = solver.get_solution();
+                        }
+                    } else {
+                        // not use
+                    }
+                }
+                //sa.print();
+                fprintf(stderr, "best_score : %lld\n", score(prob, best_solution.as_p()));
+                if (global_best_score < best_score) {
+                    global_best_score = best_score;
+                    global_best_solution = best_solution;
+                }
+            }
         }
     }
 
-    print_solution(cout, best_solution);
-    
-    sa.print();
+    print_solution(cout, global_best_solution);
     
     // fprintf(stderr, "best_score : %lf\n", best_score);
-    fprintf(stderr, "best_score : %lld\n", score(prob, best_solution.as_p()));
+    fprintf(stderr, "global_best_score : %lld\n", score(prob, global_best_solution.as_p()));
     
     return 0;
 }
