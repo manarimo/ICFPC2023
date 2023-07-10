@@ -80,24 +80,36 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         score: number;
         solution_path: string;
       };
-      const query=`with g as (
-        select *,
-               rank() over (partition by problem_id order by score desc, id asc) as r
-        from solutions
-      )
-      select *
-      from g
-      where r=1;`;
-      const result = await pg.query<SolutionRow>(query);
-      const solutions = result.rows.map((
-        { id, solver_name, problem_id, score, solution_path },
-      ) => ({
-        id,
-        solverName: solver_name,
-        problemId: problem_id,
-        score: Number(score),
-        solutionPath: solution_path,
-      }));
+      const bestIdResult = await pg.query(`with g as (
+          select *,
+                dense_rank() over (partition by problem_id order by score desc) as r
+          from solutions
+          order by problem_id, id
+        )
+        select min(id) as id, problem_id, r
+        from g
+        where r<6
+        group by problem_id, r
+      `);
+      const bestIds = bestIdResult.rows.map((r) => r['id']);
+
+      const placeholders: string[] = [];
+      for (let i = 1; i <= bestIds.length; ++i) {
+        placeholders.push('$' + i);
+      }
+      const whereClause = `where id in (${placeholders.join(',')})`;
+      const result = await pg.query<SolutionRow>(`select * from solutions ${whereClause} order by problem_id, score desc`, bestIds);
+      const solutions: any[] = [];
+      result.rows.forEach(({ id, solver_name, problem_id, score, solution_path }) => {
+        const solution = {
+          id,
+          solverName: solver_name,
+          problemId: problem_id,
+          score,
+          solutionPath: solution_path,
+        };
+        solutions.push(solution);
+      });
       return {
         solutions,
       };

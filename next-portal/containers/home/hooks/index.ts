@@ -1,26 +1,48 @@
 import { useMemo } from "react";
 import useProblems from "./useProblems";
-import useSolutions from "./useSolutions";
+import useSolutions, { RawSolution } from "./useSolutions";
+
+export interface Solution {
+  name: string;
+  score: number;
+  solutionPath: string;
+}
+
+export type SolutionHistoryItem = Solution & {
+  diffAbs?: number;
+  diffPct?: number;
+}
 
 const useBestSolutions = () => {
   const problems = useProblems();
   const solutions = useSolutions();
 
   const data = useMemo(() => {
-    const bestSolutions = new Map<
-      number,
-      {
-        solverName: string;
-        problemId: number;
-        score: number;
-        solutionPath: string;
-      }
-    >();
+    const bestSolutions = new Map<number, RawSolution>();
+    const solutionHistory: Record<number, SolutionHistoryItem[]> = {};
     solutions.data?.solutions.forEach((solution) => {
+      // Keep best solution
       const current = bestSolutions.get(solution.problemId);
       if (!current || solution.score > current.score) {
         bestSolutions.set(solution.problemId, solution);
       }
+
+      // Add solution history item
+      if (solutionHistory[solution.problemId] == undefined) {
+        solutionHistory[solution.problemId] = [];
+      }
+      if (solutionHistory[solution.problemId].length > 0) {
+        // Calculate diff
+        const arr = solutionHistory[solution.problemId];
+        const lastEntry = arr[arr.length - 1];
+        lastEntry.diffAbs = lastEntry.score - solution.score;
+        lastEntry.diffPct = lastEntry.diffAbs / solution.score * 100;
+      }
+      solutionHistory[solution.problemId].push({
+        name: solution.solverName,
+        score: solution.score,
+        solutionPath: solution.solutionPath
+      });
     });
 
     return problems.data?.problems.map((problem) => {
@@ -34,6 +56,7 @@ const useBestSolutions = () => {
             solutionPath: solution.solutionPath,
           }
           : null,
+        history: solutionHistory[problem.problemId] ?? [],
       };
     });
   }, [problems.data?.problems, solutions.data?.solutions]);

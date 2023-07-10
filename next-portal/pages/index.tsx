@@ -7,7 +7,7 @@ export default function Home() {
     <div
       style={{
         margin: "0 auto",
-        width: "1000px",
+        width: "1600px",
       }}
     >
       <h1

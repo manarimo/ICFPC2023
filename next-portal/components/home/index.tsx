@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useMemo } from "react";
+import { SolutionHistoryItem } from "../../containers/home/hooks";
 
 type ProblemProps = {
   problemId: number;
@@ -12,6 +13,7 @@ type ProblemProps = {
     score: number;
     solutionPath: string;
   } | null;
+  history: SolutionHistoryItem[];
 };
 
 type Props = {
@@ -37,6 +39,7 @@ const Home = ({ problems }: Props) => {
           <th>Image</th>
           <th>Best Solution</th>
           <th>Best Solution Image</th>
+          <th>Score History</th>
         </tr>
       </thead>
       <tbody>
@@ -124,11 +127,34 @@ const Home = ({ problems }: Props) => {
                 />
               ) : null}
             </td>
+            <td
+              style={{
+                border: "1px solid black",
+                padding: "5px",
+              }}
+            >
+              <ul>
+                {problem.history.map((item) => (
+                  <li>{formatNumber(item.score)} <span style={{ fontSize: '10px' }}>(+{formatNumber(item.diffAbs || 0)}, +{formatPercent(item.diffPct || 0)}%)</span></li>
+                ))}
+              </ul>
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
   );
 };
+
+function formatNumber(value: number): string {
+  return value.toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",") ?? "";
+}
+
+function formatPercent(value: number): string {
+  const dec = Math.floor(value);
+  const frac = Math.floor((value - dec) * 100).toString().padStart(2, '0');
+  return `${dec}.${frac}`;
+}
 
 export default Home;
