@@ -11,6 +11,7 @@ interface LooperEvent {
     limit?: number;
     env?: Record<string, string>;
     exclude?: number[];
+    tag?: string;
     response?: (SolverRunnerResponse | SolverErrorResponse)[];
 }
 
@@ -42,17 +43,24 @@ pg.on('error', (err) => {
   console.error('pg error', err);
 });
 
-async function determineBestSeeds(): Promise<Record<number, string>> {
+async function determineBestSeeds(tag?: string): Promise<Record<number, string>> {
+    let params: any = [];
+    let tagClause: string = '';
+    if (tag) {
+        tagClause = 'where tag=$1';
+        params.push(tag);
+    }
     const response = await pg.query(`
         with g as (
             select *,
             rank() over (partition by problem_id order by score desc, id asc) as r
             from solutions
+            ${tagClause}
         )
         select *
         from g
         where r=1; 
-    `);
+    `, params);
 
     const result: Record<number, string> = {};
     for (const row of response.rows) {
@@ -61,20 +69,21 @@ async function determineBestSeeds(): Promise<Record<number, string>> {
     return result;
 }
 
-async function saveResponse(responses: (SolverRunnerResponse | SolverErrorResponse)[]): Promise<void> {
+async function saveResponse(responses: (SolverRunnerResponse | SolverErrorResponse)[], tag?: string): Promise<void> {
     const placeholders: string[] = [];
     const values: any[] = [];
     const successfulResponses = responses.filter((r) => r != null && !('Status' in r)) as SolverRunnerResponse[];
     successfulResponses.forEach((r, i) => {
-        placeholders.push(`($${i*4 + 1}, $${i*4 + 2}, $${i*4 + 3}, $${i*4 + 4})`);
+        placeholders.push(`($${i*5 + 1}, $${i*5 + 2}, $${i*5 + 3}, $${i*5 + 4}, $${i*5 + 5})`);
         values.push(r.solverName);
         values.push(r.problemId);
         values.push(r.score);
         values.push(`solutions/${r.solverName}/${r.problemId}.json`);
+        values.push(tag);
     })
 
     const res = await pg.query(
-        'INSERT INTO solutions (solver_name, problem_id, score, solution_path)'
+        'INSERT INTO solutions (solver_name, problem_id, score, solution_path, tag)'
         + ' VALUES '
         + placeholders.join(',')
         + ' ON CONFLICT ON CONSTRAINT solutions_solver_name_problem_id_key'
@@ -87,7 +96,7 @@ export async function handler(
   context: Context,
 ): Promise<LooperResponse> {
     if (event.response) {
-        await saveResponse(event.response);
+        await saveResponse(event.response, event.tag);
     }
 
     if (event.limit && event.count > event.limit) {
@@ -100,7 +109,7 @@ export async function handler(
     // Make Kolog work
     await discordSay(`${event.label}のループ${event.count}回目をじっこうします！`);
 
-    const bestSeeds = await determineBestSeeds();
+    const bestSeeds = await determineBestSeeds(event.tag);
 
     const items: SolverRunnerEvent[] = [];
     for (let i = 1; i <= 90; ++i) {
