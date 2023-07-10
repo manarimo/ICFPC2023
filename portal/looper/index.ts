@@ -79,7 +79,7 @@ async function saveResponse(responses: (SolverRunnerResponse | SolverErrorRespon
         values.push(r.problemId);
         values.push(r.score);
         values.push(`solutions/${r.solverName}/${r.problemId}.json`);
-        values.push(tag);
+        values.push(tag || r.tag);
     })
 
     const res = await pg.query(

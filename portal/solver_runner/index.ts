@@ -12,12 +12,14 @@ export interface SolverRunnerEvent {
     solverName: string;
     seed?: string;
     env?: Record<string, string>;
+    tag?: string;
 }
 
 export interface SolverRunnerResponse {
     problemId: number;
     solverName: string;
     score: number;
+    tag?: string;
 }
 
 const s3Util = new S3Util();
@@ -102,5 +104,6 @@ export async function handler(
         problemId: event.problemId,
         solverName: event.solverName,
         score: score,
+        tag: event.tag,
     };
 }
