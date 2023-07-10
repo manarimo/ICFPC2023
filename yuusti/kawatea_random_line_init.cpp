@@ -104,7 +104,7 @@ class simulated_annealing {
     constexpr static bool MAXIMIZE = true;
     constexpr static int LOG_SIZE = 0xFFFF;
     constexpr static int UPDATE_INTERVAL = 0xFF;
-    constexpr static double START_TEMP = 1;
+    constexpr static double START_TEMP = 1e-8;
     constexpr static double END_TEMP = 1e-9;
     double time_limit;
     double temp_ratio;
@@ -287,6 +287,53 @@ void random_init2() {
 
     assert(false);
 }
+
+int line_init(double margin, double margin2) {
+    placements.clear();
+
+    geo::P top_right(stage_right, stage_top);
+    placements.push_back(top_right);
+    // north
+    for (int j = 1; stage_left < top_right.X - j * (RADIUS + margin) && placements.size() < problem.musicians.size(); j++) {
+        placements.push_back(geo::P(top_right.X - j * (RADIUS + margin), top_right.Y));
+    }
+    // east
+    for (int j = 1; stage_bottom < top_right.Y - j * (RADIUS + margin) && placements.size() < problem.musicians.size(); j++) {
+        placements.push_back(geo::P(top_right.X, top_right.Y - j * (RADIUS + margin)));
+    }
+
+    geo::P top_right2(stage_right - RADIUS, stage_top - RADIUS);
+    // north2
+    for (int j = 1; stage_left < top_right2.X - j * (RADIUS + margin2) && placements.size() < problem.musicians.size(); j++) {
+        placements.push_back(geo::P(top_right2.X - j * (RADIUS + margin2), top_right2.Y));
+    }
+    // east2
+    for (int j = 1; stage_bottom < top_right2.Y - j * (RADIUS + margin2) && placements.size() < problem.musicians.size(); j++) {
+        placements.push_back(geo::P(top_right2.X, top_right2.Y - j * (RADIUS + margin)));
+    }
+
+    int ret = placements.size();
+
+    for (int i = placements.size(); i < problem.musicians.size(); i++) {
+        while (true) {
+            geo::P p(random::get(stage_left, stage_right), random::get(stage_bottom, stage_top));
+            bool ng = false;
+            for (int j = 0; j < i; j++) {
+                if (dist2(placements[j], p) < RADIUS2) {
+                    ng = true;
+                    break;
+                }
+            }
+            if (!ng) {
+                placements.push_back(p);
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
 
 double get_angle(const geo::P& p1, const geo::P& p2) {
     return atan2(p2.Y - p1.Y, p2.X - p1.X);
@@ -488,50 +535,49 @@ geo::P edge_point() {
     return {x, y};
 }
 
-// g++ -std=c++2a -O3 kawatea_random.cpp
-// ./a.out ../solutions/sync-bests/1.json < ../problems/1.json > 1.json
 int main(int argc, char *argv[]) {
     input();
 
     max_diff_width = 10.0;
     max_diff_height = 10.0;
 
-    string file_name = "unknown";
-
     double best_score;
-    if (argc < 2) {
-        // sa_no_block();
-        random_init();
-        best_score = score_all();
-        fprintf(stderr, "no file loaded, initial score: %lf\n", best_score);
-    } else {
-        manarimo::solution_t intermediate_solution;
-        manarimo::load_solution(string(argv[1]), intermediate_solution);
-        file_name = get_prob_name(string(argv[1]));
-        for (auto p : intermediate_solution.placements) {
-            best_placements.push_back(make_pair(p.x, p.y));
-        }
-        placements = best_placements;
-        best_score = score_all();
-        fprintf(stderr, "score at load : %lf\n", best_score);
-    }
-
-    double init_best = best_score;
 
     double default_max_diff_width = problem.stage_width / 10;
     double default_max_diff_height = problem.stage_height / 10;
+    int loop = 0;
     double k = 1.0;
-    for (int times = 0; times < 10000000; ++times) {
+
+    double m = 0.01;
+    for (int times = 0; times < 10; ++times) {
+        // init
+        double ma = times * m, mb = 0.00;
+        int x = line_init(ma, mb);
+        fprintf(stderr, "set %d points\n", x);
+        fprintf(stderr, "marginA: %lf, marginB: %lf\n", ma, mb);
+        best_score = score_all();
+        double init_best = best_score;
+        fprintf(stderr, "no file loaded, initial score: %lf\n", best_score);
+
+        string file_name = to_string(ma) + "-" + to_string(mb);
+        fprintf(stderr, "storing to %s\n", (file_name + "-line-init-" + ".json").c_str());
+        store_to_file(placements, volumes, file_name + "-line-init-" + ".json");
+        // init end
+
+        loop++;
+        double reduction = 0.999;
         fprintf(stderr, "default max diff width: %lf, default max diff height: %lf , reduction: %lf\n", default_max_diff_width, default_max_diff_height, reduction);
         double current_score = best_score;
         
         int unchanged = 0;
         vector<pair<int, int>> new_blocked;
         simulated_annealing sa(MAIN_TIME_LIMIT);
+
+
         while (!sa.end()) {
+            max_diff_width = max(0.001, default_max_diff_width);
+            max_diff_height = max(0.001, default_max_diff_height);
             k *= reduction;
-            max_diff_width = max(0.001, default_max_diff_width * k);
-            max_diff_height = max(0.001, default_max_diff_height * k);
 
             unchanged++;
             if (unchanged == 10000) {
@@ -540,165 +586,8 @@ int main(int argc, char *argv[]) {
                 unchanged = 0;
             }
 
-            if (random::get(100) < 80) {
-                if (random::get(100) < 95) {
-                    int m = random::get(problem.musicians.size());
-                    geo::P& current_p = placements[m];
-                    double dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
-                    double dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);
-                    geo::P next_p = current_p;
-                    next_p.X += dx;
-                    next_p.Y += dy;
-                    bool ng = false;
-                    for (int i = 0; i < placements.size(); i++) {
-                        if (i == m) continue;
-                        if (dist2(placements[i], next_p) < RADIUS2) {
-                            ng = true;
-                            break;
-                        }
-                    }
-                    if (ng) continue;
-                    for (int i = 0; i < problem.musicians.size(); i++) tmp_impact_sum[i] = impact_sum[i];
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        if (i == m) continue;
-                        for (int j : blocked_attendees[i][m]) {
-                            blocked_count[i][j]--;
-                            if (blocked_count[i][j] == 0) tmp_impact_sum[i] += calc_one_score(placements[i], problem.attendees[j].pos, problem.attendees[j].tastes[problem.musicians[i]]);
-                        }
-                    }
-                    calc_blocked_one(m, next_p, tmp_attendee_angles, tmp_blocked_attendees, tmp_blocked_count);
-                    tmp_impact_sum[m] = 0;
-                    for (int i = 0; i < problem.attendees.size(); i++) {
-                         if (tmp_blocked_count[i] == 0) tmp_impact_sum[m] += calc_one_score(next_p, problem.attendees[i].pos, problem.attendees[i].tastes[problem.musicians[m]]);
-                    }
-                    new_blocked.clear();
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        if (i == m) continue;
-                        double angle = get_angle(placements[i], next_p);
-                        double offset = asin(BLOCK_RADIUS / dist(placements[i], next_p));
-                        double start = angle - offset;
-                        double end = angle + offset;
-                        if (start < -M_PI) {
-                            start += M_PI * 2;
-                            end += M_PI * 2;
-                        }
-                        int index = lower_bound(attendee_angles[i].begin(), attendee_angles[i].end(), make_pair(start, 100000000)) - attendee_angles[i].begin();
-                        for (; index < attendee_angles[i].size(); index++) {
-                            if (attendee_angles[i][index].first >= end) break;
-                            int attendee = attendee_angles[i][index].second;
-                            new_blocked.emplace_back(i, attendee);
-                            if (blocked_count[i][attendee] == 0) tmp_impact_sum[i] -= calc_one_score(placements[i], problem.attendees[attendee].pos, problem.attendees[attendee].tastes[problem.musicians[i]]);
-                        }
-                    }
-                    double next_score = 0;
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        next_score += ceil(VOLUME * max(tmp_impact_sum[i], 0.0));
-                    }
-                    if (sa.accept(current_score, next_score, MOVE)) {
-                        current_score = next_score;
-                        placements[m] = next_p;
-                        swap(attendee_angles[m], tmp_attendee_angles);
-                        for (int i = 0; i < problem.musicians.size(); i++) swap(blocked_attendees[m][i], tmp_blocked_attendees[i]);
-                        for (int i = 0; i < problem.attendees.size(); i++) blocked_count[m][i] = tmp_blocked_count[i];
-                        for (int i = 0; i < problem.musicians.size(); i++) {
-                            if (i == m) continue;
-                            blocked_attendees[i][m].clear();
-                        }
-                        for (const pair<int, int>& p : new_blocked) {
-                            blocked_attendees[p.first][m].push_back(p.second);
-                            blocked_count[p.first][p.second]++;
-                        }
-                    for (int i = 0; i < problem.musicians.size(); i++) impact_sum[i] = tmp_impact_sum[i];
-                        if (current_score > best_score) {
-                            best_score = current_score;
-                            save_best_state();
-                            unchanged = 0;
-                        }
-                    } else {
-                        for (int i = 0; i < problem.musicians.size(); i++) {
-                            if (i == m) continue;
-                            for (int j : blocked_attendees[i][m]) blocked_count[i][j]++;
-                        }
-                    }
-                } else {
-                    int m = random::get(problem.musicians.size());
-                    geo::P& current_p = placements[m];
-
-                    geo::P next_p = edge_point();
-
-                    bool ng = false;
-                    for (int i = 0; i < placements.size(); i++) {
-                        if (i == m) continue;
-                        if (dist2(placements[i], next_p) < RADIUS2) {
-                            ng = true;
-                            break;
-                        }
-                    }
-                    if (ng) continue;
-                    for (int i = 0; i < problem.musicians.size(); i++) tmp_impact_sum[i] = impact_sum[i];
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        if (i == m) continue;
-                        for (int j : blocked_attendees[i][m]) {
-                            blocked_count[i][j]--;
-                    if (blocked_count[i][j] == 0) tmp_impact_sum[i] += calc_one_score(placements[i], problem.attendees[j].pos, problem.attendees[j].tastes[problem.musicians[i]]);
-                        }
-                    }
-                    calc_blocked_one(m, next_p, tmp_attendee_angles, tmp_blocked_attendees, tmp_blocked_count);
-                    tmp_impact_sum[m] = 0;
-                    for (int i = 0; i < problem.attendees.size(); i++) {
-                         if (tmp_blocked_count[i] == 0) tmp_impact_sum[m] += calc_one_score(next_p, problem.attendees[i].pos, problem.attendees[i].tastes[problem.musicians[m]]);
-                    }
-                    new_blocked.clear();
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        if (i == m) continue;
-                        double angle = get_angle(placements[i], next_p);
-                        double offset = asin(BLOCK_RADIUS / dist(placements[i], next_p));
-                        double start = angle - offset;
-                        double end = angle + offset;
-                        if (start < -M_PI) {
-                            start += M_PI * 2;
-                            end += M_PI * 2;
-                        }
-                        int index = lower_bound(attendee_angles[i].begin(), attendee_angles[i].end(), make_pair(start, 100000000)) - attendee_angles[i].begin();
-                        for (; index < attendee_angles[i].size(); index++) {
-                            if (attendee_angles[i][index].first >= end) break;
-                            int attendee = attendee_angles[i][index].second;
-                            new_blocked.emplace_back(i, attendee);
-                            if (blocked_count[i][attendee] == 0) tmp_impact_sum[i] -= calc_one_score(placements[i], problem.attendees[attendee].pos, problem.attendees[attendee].tastes[problem.musicians[i]]);
-                        }
-                    }
-                    double next_score = 0;
-                    for (int i = 0; i < problem.musicians.size(); i++) {
-                        next_score += ceil(VOLUME * max(tmp_impact_sum[i], 0.0));
-                    }
-                    if (sa.accept(current_score, next_score, MOVE_EDGE)) {
-                        current_score = next_score;
-                        placements[m] = next_p;
-                        swap(attendee_angles[m], tmp_attendee_angles);
-                        for (int i = 0; i < problem.musicians.size(); i++) swap(blocked_attendees[m][i], tmp_blocked_attendees[i]);
-                        for (int i = 0; i < problem.attendees.size(); i++) blocked_count[m][i] = tmp_blocked_count[i];
-                        for (int i = 0; i < problem.musicians.size(); i++) {
-                            if (i == m) continue;
-                            blocked_attendees[i][m].clear();
-                        }
-                        for (const pair<int, int>& p : new_blocked) {
-                            blocked_attendees[p.first][m].push_back(p.second);
-                            blocked_count[p.first][p.second]++;
-                        }
-                        for (int i = 0; i < problem.musicians.size(); i++) impact_sum[i] = tmp_impact_sum[i];
-                        if (current_score > best_score) {
-                            best_score = current_score;
-                            save_best_state();
-                            unchanged = 0;
-                        }
-                    } else {
-                        for (int i = 0; i < problem.musicians.size(); i++) {
-                            if (i == m) continue;
-                            for (int j : blocked_attendees[i][m]) blocked_count[i][j]++;
-                        }
-                    }
-                }
-            } else if (random::get(100) < 95) {
+            // swap
+            if (random::get(100) < 95) {
                 if (random::get(100) < 80) {
                     int m1 = random::get(problem.musicians.size());
                     int m2 = random::get(problem.musicians.size() - 1);
@@ -847,15 +736,13 @@ int main(int argc, char *argv[]) {
             }
         }
         fprintf(stderr, "best_score : %lf\n", best_score);
-        fprintf(stderr, "best_score increase so far : %lf\n", best_score - init_best);
+        fprintf(stderr, "best_score increase : %lf\n", best_score - init_best);
         fprintf(stderr, "true score : %lf\n", score_all());
-        fprintf(stderr, "storing to %s\n", (file_name + "-" + to_string(times) + "-" + to_string(best_score) + ".json").c_str());
+        fprintf(stderr, "storing to %s\n", (file_name + ".json").c_str());
 
-        store_to_file(best_placements, volumes, file_name + "-" + to_string(times) + "-" + to_string(best_score) + ".json");
+        store_to_file(best_placements, volumes, file_name + ".json");
         sa.print();
     }
-
-    output(best_placements, volumes);
     
     return 0;
 }
