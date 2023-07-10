@@ -77,7 +77,7 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         id: number;
         solver_name: string;
         problem_id: number;
-        score: number;
+        score: string;
         solution_path: string;
       };
       const bestIdResult = await pg.query(`with g as (
@@ -105,7 +105,7 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
           id,
           solverName: solver_name,
           problemId: problem_id,
-          score,
+          score: parseInt(score),
           solutionPath: solution_path,
         };
         solutions.push(solution);
