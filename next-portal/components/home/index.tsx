@@ -13,6 +13,7 @@ type ProblemProps = {
     name: string;
     score: number;
     solutionPath: string;
+    tag: string;
   } | null;
   history: SolutionHistoryItem[];
 };
@@ -113,7 +114,7 @@ const Home = ({ problems: propProblems }: Props) => {
               }}
             >
               <ul>
-                <li>{problem.bestSolution?.name ?? ""}</li>
+                <li>{problem.bestSolution?.name ?? ""} ({problem.bestSolution?.tag})</li>
                 <li>
                   {problem.bestSolution?.score
                     .toString()

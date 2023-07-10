@@ -5,6 +5,7 @@ export interface RawSolution {
   problemId: number;
   score: number;
   solutionPath: string;
+  tag?: string;
 }
 
 const useSolutions = (tag?: string) => {

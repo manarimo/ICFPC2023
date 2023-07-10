@@ -79,6 +79,7 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         problem_id: number;
         score: string;
         solution_path: string;
+        tag: string;
       };
       const tag = event.queryStringParameters ? event.queryStringParameters['tag'] : undefined;
       let sqlParams: any[] = [];
@@ -114,13 +115,14 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
       const whereClause = `where id in (${placeholders.join(',')})`;
       const result = await pg.query<SolutionRow>(`select * from solutions ${whereClause} order by problem_id, score desc`, bestIds);
       const solutions: any[] = [];
-      result.rows.forEach(({ id, solver_name, problem_id, score, solution_path }) => {
+      result.rows.forEach(({ id, solver_name, problem_id, score, solution_path, tag }) => {
         const solution = {
           id,
           solverName: solver_name,
           problemId: problem_id,
           score: parseInt(score),
           solutionPath: solution_path,
+          tag,
         };
         solutions.push(solution);
       });

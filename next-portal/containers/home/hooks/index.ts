@@ -6,6 +6,7 @@ export interface Solution {
   name: string;
   score: number;
   solutionPath: string;
+  tag?: string;
 }
 
 export type SolutionHistoryItem = Solution & {
@@ -41,7 +42,8 @@ const useBestSolutions = (tag?: string) => {
       solutionHistory[solution.problemId].push({
         name: solution.solverName,
         score: solution.score,
-        solutionPath: solution.solutionPath
+        solutionPath: solution.solutionPath,
+        tag: solution.tag,
       });
     });
 
@@ -54,6 +56,7 @@ const useBestSolutions = (tag?: string) => {
             name: solution.solverName,
             score: solution.score,
             solutionPath: solution.solutionPath,
+            tag: solution.tag,
           }
           : null,
         history: solutionHistory[problem.problemId] ?? [],
