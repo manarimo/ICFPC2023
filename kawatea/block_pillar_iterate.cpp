@@ -186,7 +186,7 @@ void input() {
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
     
-    max_diff_width = max_diff_height = pow(10, random::get_double(1, 3)) / 20;
+    max_diff_width = max_diff_height = pow(10, random::get_double(-4, 1));
     
     for (int i = 0; i < problem.musicians.size(); i++) instrument[problem.musicians[i]].push_back(i);
 }
