@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { SolutionHistoryItem } from "../../containers/home/hooks";
-import { useSortKey } from "@/containers/home/hooks/useSortKey";
 
 type ProblemProps = {
   problemId: number;
@@ -45,6 +44,8 @@ const Home = ({ problems: propProblems }: Props) => {
   }, [problems]);
   
   return (
+    <>
+    <h2>Total score: {formatNumber(pointSum)}</h2>
     <table>
       <thead>
         <tr>
@@ -160,6 +161,7 @@ const Home = ({ problems: propProblems }: Props) => {
         ))}
       </tbody>
     </table>
+    </>
   );
 };
 
