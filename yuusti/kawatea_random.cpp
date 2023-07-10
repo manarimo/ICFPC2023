@@ -521,6 +521,7 @@ int main(int argc, char *argv[]) {
     double default_max_diff_width = problem.stage_width / 10;
     double default_max_diff_height = problem.stage_height / 10;
     double k = 1.0;
+    double reduction = 0.999;
     for (int times = 0; times < 10000000; ++times) {
         fprintf(stderr, "default max diff width: %lf, default max diff height: %lf , reduction: %lf\n", default_max_diff_width, default_max_diff_height, reduction);
         double current_score = best_score;
