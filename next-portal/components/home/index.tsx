@@ -59,7 +59,7 @@ const Home = ({ problems: propProblems }: Props) => {
         </tr>
       </thead>
       <tbody>
-        {problems.map((problem) => (
+        {problems.filter((p) => p.bestSolution != undefined).map((problem) => (
           <tr key={problem.problemId}>
             <td
               style={{

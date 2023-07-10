@@ -13,9 +13,9 @@ export type SolutionHistoryItem = Solution & {
   diffPct?: number;
 }
 
-const useBestSolutions = () => {
+const useBestSolutions = (tag?: string) => {
   const problems = useProblems();
-  const solutions = useSolutions();
+  const solutions = useSolutions(tag);
 
   const data = useMemo(() => {
     const bestSolutions = new Map<number, RawSolution>();

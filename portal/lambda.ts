@@ -80,18 +80,32 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         score: string;
         solution_path: string;
       };
+      const tag = event.queryStringParameters ? event.queryStringParameters['tag'] : undefined;
+      let sqlParams: any[] = [];
+      let tagFilter = '';
+      if (tag) {
+        tagFilter = ' where tag=$1 ';
+        sqlParams.push(tag);
+      }
+
       const bestIdResult = await pg.query(`with g as (
           select *,
                 dense_rank() over (partition by problem_id order by score desc) as r
           from solutions
+          ${tagFilter}
           order by problem_id, id
         )
         select min(id) as id, problem_id, r
         from g
         where r<6
         group by problem_id, r
-      `);
+      `, sqlParams);
       const bestIds = bestIdResult.rows.map((r) => r['id']);
+      if (bestIds.length == 0) {
+        return {
+          solutions: []
+        };
+      }
 
       const placeholders: string[] = [];
       for (let i = 1; i <= bestIds.length; ++i) {
