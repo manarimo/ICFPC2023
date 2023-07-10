@@ -3,6 +3,7 @@ import { chmod, writeFile } from "fs/promises";
 import { Pool as PgPool } from 'pg';
 import { S3Util } from "./util/s3";
 import { Spawner } from "./util/spawner";
+import { paintSolution } from "./paint/paint";
 
 const s3Util = new S3Util();
 
@@ -64,16 +65,25 @@ export async function submitSolutionHandler(
     const score = parseInt(await scorer.run());
     console.log(`score: ${score}`);
 
+    // Generate solution image
+    const solutionImagePath = '/tmp/solution.svg';
+    await paintSolution(problemPath, solutionPath, solutionImagePath);
+
     // Upload solution to S3
     const key = `solutions/${solverName}/${problemId}.json`;
     await s3Util.uploadS3Object(key, content);
     console.log(`Stored file as ${key}`);
 
+    // Save solution image
+    const solutionImageS3Path = `solutions/${solverName}/images/${problemId}.svg`;
+    await s3Util.uploadS3ObjectFromFile(solutionImageS3Path, solutionImagePath, 'image/svg+xml');
+
     // Update solution database
-    const params = [solverName, parseInt(problemId), score, key];
+    const tag = event.queryStringParameters['tag'];
+    const params = [solverName, parseInt(problemId), score, key, tag];
     try {
         console.log(params);
-        const response = await pg.query('INSERT INTO solutions (solver_name, problem_id, score, solution_path) VALUES ($1, $2, $3, $4)', params);
+        const response = await pg.query('INSERT INTO solutions (solver_name, problem_id, score, solution_path, tag) VALUES ($1, $2, $3, $4, $5)', params);
         console.log(response);
     } catch (e) {
         console.error(`pg error`, e);

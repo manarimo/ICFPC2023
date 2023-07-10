@@ -38,4 +38,5 @@ export interface Point {
 
 export interface Solution {
     placements: Point[];
+    volumes?: number[];
 }

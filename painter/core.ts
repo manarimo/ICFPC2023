@@ -66,13 +66,24 @@ export async function processFile(problemFile: string, solutionFile: string | un
 
     if (solution) {
         // Draw solutions
+        let idx = 0;
         for (const p of solution.placements) {
+            const volume = solution.volumes ? solution.volumes[idx] : 1;
+            let color: string;
+            if (volume > 7) {
+                color = 'blue';
+            } else if (volume > 4) {
+                color = 'cyan';
+            } else {
+                color = 'lightblue';
+            }
             svg.circle({
                 x: p.x,
                 y: problem.room_height - p.y,
                 radius: 5,
-                fill: 'blue'
+                fill: color
             });
+            ++idx;
         }
     }
 

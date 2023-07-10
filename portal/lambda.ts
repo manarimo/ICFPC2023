@@ -77,21 +77,63 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         id: number;
         solver_name: string;
         problem_id: number;
-        score: number;
+        score: string;
         solution_path: string;
+        tag: string;
       };
-      const result = await pg.query<SolutionRow>("SELECT * FROM solutions");
-      const solutions = result.rows.map((
-        { id, solver_name, problem_id, score, solution_path },
-      ) => ({
-        id,
-        solverName: solver_name,
-        problemId: problem_id,
-        score: Number(score),
-        solutionPath: solution_path,
-      }));
+      const tag = event.queryStringParameters ? event.queryStringParameters['tag'] : undefined;
+      let sqlParams: any[] = [];
+      let tagFilter = '';
+      if (tag) {
+        tagFilter = ' where tag=$1 ';
+        sqlParams.push(tag);
+      }
+
+      const bestIdResult = await pg.query(`with g as (
+          select *,
+                dense_rank() over (partition by problem_id order by score desc) as r
+          from solutions
+          ${tagFilter}
+          order by problem_id, id
+        )
+        select min(id) as id, problem_id, r
+        from g
+        where r<6
+        group by problem_id, r
+      `, sqlParams);
+      const bestIds = bestIdResult.rows.map((r) => r['id']);
+      if (bestIds.length == 0) {
+        return {
+          solutions: []
+        };
+      }
+
+      const placeholders: string[] = [];
+      for (let i = 1; i <= bestIds.length; ++i) {
+        placeholders.push('$' + i);
+      }
+      const whereClause = `where id in (${placeholders.join(',')})`;
+      const result = await pg.query<SolutionRow>(`select * from solutions ${whereClause} order by problem_id, score desc`, bestIds);
+      const solutions: any[] = [];
+      result.rows.forEach(({ id, solver_name, problem_id, score, solution_path, tag }) => {
+        const solution = {
+          id,
+          solverName: solver_name,
+          problemId: problem_id,
+          score: parseInt(score),
+          solutionPath: solution_path,
+          tag,
+        };
+        solutions.push(solution);
+      });
       return {
         solutions,
+      };
+    }
+    case "/tags": {
+      const result = await pg.query('select distinct(tag) as tag from solutions order by tag');
+      return {
+        tags: result.rows.map((r) => r['tag']).filter((t) => t != null)
       };
     }
     default: {

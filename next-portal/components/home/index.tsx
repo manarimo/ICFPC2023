@@ -1,5 +1,7 @@
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { SolutionHistoryItem } from "../../containers/home/hooks";
+import { useSortKey } from "@/containers/home/hooks/useSortKey";
 
 type ProblemProps = {
   problemId: number;
@@ -11,14 +13,27 @@ type ProblemProps = {
     name: string;
     score: number;
     solutionPath: string;
+    tag: string;
   } | null;
+  history: SolutionHistoryItem[];
 };
 
 type Props = {
   problems: ProblemProps[];
 };
 
-const Home = ({ problems }: Props) => {
+type SortKey = 'id' | 'score';
+
+const Home = ({ problems: propProblems }: Props) => {
+  const [sortKey, setSortKey] = useState('id' as SortKey);
+  const problems = useMemo(() => {
+    if (sortKey == 'score') {
+      const tmp = [...propProblems];
+      tmp.sort((a, b) => (b.bestSolution?.score || 0) - (a.bestSolution?.score || 0));
+      return tmp;
+    }
+    return propProblems;
+  }, [propProblems, sortKey]);
   const pointSum = useMemo(() => {
     let sum = 0;
     problems.forEach((problem) => {
@@ -28,6 +43,7 @@ const Home = ({ problems }: Props) => {
     });
     return sum;
   }, [problems]);
+  
   return (
     <table>
       <thead>
@@ -35,12 +51,16 @@ const Home = ({ problems }: Props) => {
           <th>Problem</th>
           <th>Info</th>
           <th>Image</th>
-          <th>Best Solution</th>
+          <th>
+            <div>Best Solution</div>
+            <input type="checkbox" checked={sortKey == 'score'} onChange={(e) => setSortKey(e.currentTarget.checked ? 'score' : 'id')}></input>Sort by score
+          </th>
           <th>Best Solution Image</th>
+          <th>Score History</th>
         </tr>
       </thead>
       <tbody>
-        {problems.map((problem) => (
+        {problems.filter((p) => p.bestSolution != undefined).map((problem) => (
           <tr key={problem.problemId}>
             <td
               style={{
@@ -94,7 +114,7 @@ const Home = ({ problems }: Props) => {
               }}
             >
               <ul>
-                <li>{problem.bestSolution?.name ?? ""}</li>
+                <li>{problem.bestSolution?.name ?? ""} ({problem.bestSolution?.tag})</li>
                 <li>
                   {problem.bestSolution?.score
                     .toString()
@@ -124,11 +144,34 @@ const Home = ({ problems }: Props) => {
                 />
               ) : null}
             </td>
+            <td
+              style={{
+                border: "1px solid black",
+                padding: "5px",
+              }}
+            >
+              <ul>
+                {problem.history.map((item) => (
+                  <li>{formatNumber(item.score)} <span style={{ fontSize: '10px' }}>(+{formatNumber(item.diffAbs || 0)}, +{formatPercent(item.diffPct || 0)}%)</span></li>
+                ))}
+              </ul>
+            </td>
           </tr>
         ))}
       </tbody>
     </table>
   );
 };
+
+function formatNumber(value: number): string {
+  return value.toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",") ?? "";
+}
+
+function formatPercent(value: number): string {
+  const dec = Math.floor(value);
+  const frac = Math.floor((value - dec) * 100).toString().padStart(2, '0');
+  return `${dec}.${frac}`;
+}
 
 export default Home;

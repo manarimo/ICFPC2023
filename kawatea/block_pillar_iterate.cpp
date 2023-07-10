@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -133,6 +134,11 @@ double simulated_annealing::get_start_temp() const {
     return start_temp;
 }
 
+const char* getenv_or(const char* varname, const char* fallback) {
+    const char* value = getenv(varname);
+    return (value != nullptr) ? value : fallback;
+}
+
 const double INIT_TIME_LIMIT = 10;
 const double MAIN_TIME_LIMIT = 60;
 const int MAX_MUSICIAN = 1000;
@@ -141,6 +147,9 @@ const double RADIUS = 10;
 const double RADIUS2 = RADIUS * RADIUS;
 const double BLOCK_RADIUS = 5;
 const double VOLUME = 10;
+const int NEXT_RATIO = atoi(getenv_or("NEXT_RATIO", "40"));
+const double MAX_DISTANCE_POW_MIN = atoi(getenv_or("MAX_DISTANCE_POW_MIN", "-4"));
+const double MAX_DISTANCE_POW_MAX = atoi(getenv_or("MAX_DISTANCE_POW_MAX", "1"));
 manarimo::problem_t problem;
 double stage_left;
 double stage_right;
@@ -179,7 +188,7 @@ void input() {
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
     
-    max_diff_width = max_diff_height = pow(10, random::get_double(1, 3)) / 20;
+    max_diff_width = max_diff_height = pow(10, random::get_double(MAX_DISTANCE_POW_MIN, MAX_DISTANCE_POW_MAX));
     
     for (int i = 0; i < problem.musicians.size(); i++) instrument[problem.musicians[i]].push_back(i);
 }
@@ -456,7 +465,31 @@ int main(int argc, char *argv[]) {
                 double ty = clamp(problem.attendees[a].y, stage_bottom, stage_top);
                 dx = tx - current_p.X;
                 dy = ty - current_p.Y;
-            } else if (instrument[in].size() > 1 && r < 15) {
+            } else if (r < 25) {
+                if (impact_sum[m] > 0) {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    } else {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    } else {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    }
+                } else {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    } else {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    } else {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    }
+                }
+            } else if (instrument[in].size() > 1 && r < NEXT_RATIO) {
                 int mt;
                 while (true) {
                     mt = instrument[in][random::get(instrument[in].size())];
