@@ -128,6 +128,12 @@ async function apiHandler(event: APIGatewayProxyEventV2 & { path: string }) {
         solutions,
       };
     }
+    case "/tags": {
+      const result = await pg.query('select distinct(tag) as tag from solutions order by tag');
+      return {
+        tags: result.rows.map((r) => r['tag']).filter((t) => t != null)
+      };
+    }
     default: {
       return {
         message: "hello manarimo",
