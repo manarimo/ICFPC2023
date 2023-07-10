@@ -42,17 +42,24 @@ const Home = ({ problems: propProblems }: Props) => {
     });
     return sum;
   }, [problems]);
+  const [isNotifyEnabled, setIsNotifyEnabled] = useState(false);
   const [prevPointSum, setPrevPointSum] = useState(pointSum);
   if (prevPointSum !== pointSum) {
     setPrevPointSum(pointSum);
     console.log(`point update detected: ${prevPointSum} -> ${pointSum}`);
-    const audio = new Audio('/inception.aac');
-    audio.play();
+    if (isNotifyEnabled) {
+      const audio = new Audio('/inception.aac');
+      audio.play();  
+    }
   }
   
   return (
     <>
     <h2>Total score: {formatNumber(pointSum)}</h2>
+    <div>
+      <input type="checkbox" checked={isNotifyEnabled} id="checkbox-notify" onChange={() => {setIsNotifyEnabled(!isNotifyEnabled)}}></input>
+      <label htmlFor="checkbox-notify">Notify</label>
+    </div>
     <table>
       <thead>
         <tr>
