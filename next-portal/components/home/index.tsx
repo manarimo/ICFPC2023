@@ -1,6 +1,7 @@
 import Image from "next/image";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { SolutionHistoryItem } from "../../containers/home/hooks";
+import { useSortKey } from "@/containers/home/hooks/useSortKey";
 
 type ProblemProps = {
   problemId: number;
@@ -20,7 +21,18 @@ type Props = {
   problems: ProblemProps[];
 };
 
-const Home = ({ problems }: Props) => {
+type SortKey = 'id' | 'score';
+
+const Home = ({ problems: propProblems }: Props) => {
+  const [sortKey, setSortKey] = useState('id' as SortKey);
+  const problems = useMemo(() => {
+    if (sortKey == 'score') {
+      const tmp = [...propProblems];
+      tmp.sort((a, b) => (b.bestSolution?.score || 0) - (a.bestSolution?.score || 0));
+      return tmp;
+    }
+    return propProblems;
+  }, [propProblems, sortKey]);
   const pointSum = useMemo(() => {
     let sum = 0;
     problems.forEach((problem) => {
@@ -30,6 +42,7 @@ const Home = ({ problems }: Props) => {
     });
     return sum;
   }, [problems]);
+  
   return (
     <table>
       <thead>
@@ -37,7 +50,10 @@ const Home = ({ problems }: Props) => {
           <th>Problem</th>
           <th>Info</th>
           <th>Image</th>
-          <th>Best Solution</th>
+          <th>
+            <div>Best Solution</div>
+            <input type="checkbox" checked={sortKey == 'score'} onChange={(e) => setSortKey(e.currentTarget.checked ? 'score' : 'id')}></input>Sort by score
+          </th>
           <th>Best Solution Image</th>
           <th>Score History</th>
         </tr>
