@@ -467,6 +467,30 @@ int main(int argc, char *argv[]) {
                 dy = placements[mt].Y - current_p.Y + RADIUS * sin(rad);
                 if (current_p.X + dx < stage_left || stage_right < current_p.X + dx) continue;
                 if (current_p.Y + dy < stage_bottom || stage_top < current_p.Y + dy) continue;
+            } else if (r < 40) {
+                if (impact_sum[m] > 0) {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    } else {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    } else {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    }
+                } else {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    } else {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    } else {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    }
+                }
             } else {
                 dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
                 dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);

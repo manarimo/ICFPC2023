@@ -406,12 +406,37 @@ int main(int argc, char *argv[]) {
             int m = random::get(problem.musicians.size());
             geo::P& current_p = placements[m];
             double dx, dy;
-            if (random::get(100) < 1) {
+            int r = random::get(100);
+            if (r < 1) {
                 int a = random::get(problem.attendees.size());
                 double tx = clamp(problem.attendees[a].x, stage_left, stage_right);
                 double ty = clamp(problem.attendees[a].y, stage_bottom, stage_top);
                 dx = tx - current_p.X;
                 dy = ty - current_p.Y;
+            } else if (r < 30) {
+                if (impact_sum[m] > 0) {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    } else {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    } else {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    }
+                } else {
+                    if (current_p.X - stage_left < stage_right - current_p.X) {
+                        dx = clamp(random::get_double(0, max_diff_width), 0.0, stage_right - current_p.X);
+                    } else {
+                        dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
+                    }
+                    if (current_p.Y - stage_bottom < stage_top - current_p.Y) {
+                        dy = clamp(random::get_double(0, max_diff_height), 0.0, stage_top - current_p.Y);
+                    } else {
+                        dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
+                    }
+                }
             } else {
                 dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
                 dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);
