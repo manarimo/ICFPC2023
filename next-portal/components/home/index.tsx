@@ -42,6 +42,13 @@ const Home = ({ problems: propProblems }: Props) => {
     });
     return sum;
   }, [problems]);
+  const [prevPointSum, setPrevPointSum] = useState(pointSum);
+  if (prevPointSum !== prevPointSum) {
+    setPrevPointSum(pointSum);
+    console.log(`point update detected: ${prevPointSum} -> ${pointSum}`);
+    const audio = new Audio('/inception.aac');
+    audio.play();
+  }
   
   return (
     <>
