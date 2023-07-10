@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <cstdlib>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -133,6 +134,11 @@ double simulated_annealing::get_start_temp() const {
     return start_temp;
 }
 
+const char* getenv_or(const char* varname, const char* fallback) {
+    const char* value = getenv(varname);
+    return (value != nullptr) ? value : fallback;
+}
+
 const double INIT_TIME_LIMIT = 10;
 const double MAIN_TIME_LIMIT = 60;
 const int MAX_MUSICIAN = 1000;
@@ -141,6 +147,7 @@ const double RADIUS = 10;
 const double RADIUS2 = RADIUS * RADIUS;
 const double BLOCK_RADIUS = 5;
 const double VOLUME = 10;
+const int NEXT_RATIO = atoi(getenv_or("NEXT_RATIO", "40"));
 manarimo::problem_t problem;
 double stage_left;
 double stage_right;
@@ -456,18 +463,7 @@ int main(int argc, char *argv[]) {
                 double ty = clamp(problem.attendees[a].y, stage_bottom, stage_top);
                 dx = tx - current_p.X;
                 dy = ty - current_p.Y;
-            } else if (instrument[in].size() > 1 && r < 15) {
-                int mt;
-                while (true) {
-                    mt = instrument[in][random::get(instrument[in].size())];
-                    if (mt != m) break;
-                }
-                double rad = random::get_double(-M_PI, M_PI);
-                dx = placements[mt].X - current_p.X + RADIUS * cos(rad);
-                dy = placements[mt].Y - current_p.Y + RADIUS * sin(rad);
-                if (current_p.X + dx < stage_left || stage_right < current_p.X + dx) continue;
-                if (current_p.Y + dy < stage_bottom || stage_top < current_p.Y + dy) continue;
-            } else if (r < 40) {
+            } else if (r < 25) {
                 if (impact_sum[m] > 0) {
                     if (current_p.X - stage_left < stage_right - current_p.X) {
                         dx = clamp(random::get_double(-max_diff_width, 0), stage_left - current_p.X, 0.0);
@@ -491,6 +487,17 @@ int main(int argc, char *argv[]) {
                         dy = clamp(random::get_double(-max_diff_height, 0), stage_bottom - current_p.Y, 0.0);
                     }
                 }
+            } else if (instrument[in].size() > 1 && r < NEXT_RATIO) {
+                int mt;
+                while (true) {
+                    mt = instrument[in][random::get(instrument[in].size())];
+                    if (mt != m) break;
+                }
+                double rad = random::get_double(-M_PI, M_PI);
+                dx = placements[mt].X - current_p.X + RADIUS * cos(rad);
+                dy = placements[mt].Y - current_p.Y + RADIUS * sin(rad);
+                if (current_p.X + dx < stage_left || stage_right < current_p.X + dx) continue;
+                if (current_p.Y + dy < stage_bottom || stage_top < current_p.Y + dy) continue;
             } else {
                 dx = clamp(random::get_double(-max_diff_width, max_diff_width), stage_left - current_p.X, stage_right - current_p.X);
                 dy = clamp(random::get_double(-max_diff_height, max_diff_height), stage_bottom - current_p.Y, stage_top - current_p.Y);
