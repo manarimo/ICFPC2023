@@ -148,6 +148,8 @@ const double RADIUS2 = RADIUS * RADIUS;
 const double BLOCK_RADIUS = 5;
 const double VOLUME = 10;
 const int NEXT_RATIO = atoi(getenv_or("NEXT_RATIO", "40"));
+const double MAX_DISTANCE_POW_MIN = atoi(getenv_or("MAX_DISTANCE_POW_MIN", "-4"));
+const double MAX_DISTANCE_POW_MAX = atoi(getenv_or("MAX_DISTANCE_POW_MAX", "1"));
 manarimo::problem_t problem;
 double stage_left;
 double stage_right;
@@ -186,7 +188,7 @@ void input() {
     stage_bottom += RADIUS;
     stage_top -= RADIUS;
     
-    max_diff_width = max_diff_height = pow(10, random::get_double(-4, 1));
+    max_diff_width = max_diff_height = pow(10, random::get_double(MAX_DISTANCE_POW_MIN, MAX_DISTANCE_POW_MAX));
     
     for (int i = 0; i < problem.musicians.size(); i++) instrument[problem.musicians[i]].push_back(i);
 }
