@@ -17,7 +17,7 @@ For the negibour states of SA, we used two transitions:
 * Choose two musicians and swap their positions.
 * Choose a musician and slightly move them to random direction for a random distance.
 
-A challenge was how to calculate score quickly. We implemented incremental algorithm to update scores during SA. Also for quick full score calculation, we implemented an event-driven algorithm to determine if each attendee is visible from a musician.
+A challenge was how to calculate score quickly. We implemented incremental algorithm to update scores during SA. Also for quick full score calculation, we implemented a radar-sweep algorithm to determine if each attendee is visible from a musician.
 
 ## Solver Codes
 * `kawatea/no_block.cpp`: Initial solver which doesn't consider blocking effect.
