@@ -10,11 +10,11 @@ export interface RawSolution {
 
 const useSolutions = (tag?: string) => {
   const url = () => {
-    let q = '';
+    let filename = 'solutions.json';
     if (tag) {
-      q = `?tag=${tag}`;
+      filename = `solutions_${tag}.json`;
     }
-    return `https://vwbqm1f1u5.execute-api.ap-northeast-1.amazonaws.com/prod/solutions${q}`
+    return `http://icfpc2023-manarimo-3mrzsd.s3-website-ap-northeast-1.amazonaws.com/snapshot/${filename}`;
   };
   const fetcher = async (url: string) => {
     const response = await fetch(url);
